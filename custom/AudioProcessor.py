@@ -114,28 +114,46 @@ class AudioProcessor:
             sample_width=audio.sample_width,
             channels=audio.channels
         )
-
+    
     async def save_upload_to_wav(
             self, 
             upload_file: UploadFile, 
-            prefix: str, 
+            prefix: str = "", 
             volume_multiplier: float = 1.0, 
             nonsilent: bool = False, 
             reduce_noise_enabled: bool = True
         ):
-        """保存上传文件并转换为 WAV 格式（如果需要）"""
-        # 从上传文件名提取基础名称（无扩展名）
+        """
+        保存上传文件并转换为 WAV 格式（如果需要）
+
+        参数：
+            upload_file (UploadFile): FastAPI 上传的音频文件对象
+            prefix (str): 文件名前缀（默认值为空字符串）
+            volume_multiplier (float): 音量调整倍数，默认为 1.0 表示不调整音量
+            nonsilent (bool): 是否去除音频前后的静音部分，默认为 False
+            reduce_noise_enabled (bool): 是否启用降噪处理，默认为 True
+
+        返回：
+            Path: 处理后保存的 WAV 文件路径
+
+        异常：
+            Exception: 在文件保存或处理过程中可能引发异常
+        """
+        # 提取上传文件的基础名称（去除扩展名）
         audio_name = Path(upload_file.filename).stem
-        # 构建保存路径
+        # 构建保存音频文件的目录路径
         audio_dir = os.path.join(self.temp_dir, audio_name)
-        os.makedirs(audio_dir, exist_ok=True)  # 创建目录（如果不存在）
+        os.makedirs(audio_dir, exist_ok=True)  # 如果目录不存在，则创建
+        # 构建保存文件的完整路径
         upload_path = os.path.join(audio_dir, f'{prefix}{upload_file.filename}')
-        # 删除同名已存在的文件
+        # 如果目标文件已存在，删除旧文件以避免冲突
         if os.path.exists(upload_path):
             os.remove(upload_path)
-        # 检查文件格式并转换为 WAV（如果需要）
-        upload_path = Path(upload_path)  # 将上传路径转换为 Path 对象
-        if upload_path.suffix.lower() != ".wav":  # 检查文件扩展名
+        # 将路径对象化，方便后续操作
+        upload_path = Path(upload_path)
+        # 如果文件格式不是 WAV，准备转换为 WAV 格式
+        if upload_path.suffix.lower() != ".wav":
+            # 创建转换后的 WAV 文件路径
             wav_path = upload_path.with_stem(f"{upload_path.stem}_new").with_suffix(".wav")
         else:
             wav_path = upload_path
@@ -143,44 +161,52 @@ class AudioProcessor:
         logging.info(f"接收上传{upload_file.filename}请求 {upload_path}")
 
         try:
-            # 保存上传的音频文件
+            # 保存上传的原始音频文件
             with open(upload_path, "wb") as f:
                 f.write(await upload_file.read())
-            # 加载音频
+            
+            # 加载音频文件为 AudioSegment 对象（支持多种格式）
             audio = AudioSegment.from_file(upload_path)        
-            # 降噪处理
+
+            # 如果启用了降噪处理
             if reduce_noise_enabled:
                 logging.info("reduce noise start")
-                # 转换为 NumPy 数组
+                # 将音频转换为 NumPy 数组格式
                 audio_np = self.audio_to_np_array(audio)
-                # 使用前 0.3 秒作为噪音参考（假设音频开头为背景噪音）
-                noise_duration = int(audio.frame_rate * 0.3)  # 0.3 秒对应的采样点数量
-                noise_profile = audio_np[:noise_duration]  # 提取前 0.3 秒
-                # 使用较温和的降噪参数
+                # 使用音频开头的 0.3 秒作为背景噪声参考
+                noise_duration = int(audio.frame_rate * 0.3)  # 计算 0.3 秒的采样点数量
+                noise_profile = audio_np[:noise_duration]  # 提取噪声样本
+                # 调用降噪算法并进行处理
                 reduced_audio_np = reduce_noise(
                     y=audio_np,
                     sr=audio.frame_rate,
                     y_noise=noise_profile,
-                    n_std_thresh_stationary=2.0,  # 提高阈值，减少过度降噪
+                    n_std_thresh_stationary=2.0,  # 设置较温和的噪声阈值
                     prop_decrease=0.8  # 降低噪声衰减比例
                 )
-                # 转换回 AudioSegment
+                # 将降噪后的音频数据转换回 AudioSegment 对象
                 audio = self.np_array_to_audio(reduced_audio_np, audio)
-            # 去除前后静音
+
+            # 如果需要去除前后的静音部分
             if nonsilent:
                 logging.info("nonsilent start")
+                # 检测音频中非静音的区间
                 nonsilent_ranges = detect_nonsilent(audio, min_silence_len=300, silence_thresh=audio.dBFS - 16)
                 if nonsilent_ranges:
+                    # 提取第一个和最后一个非静音区间的起始和结束位置
                     start_trim = nonsilent_ranges[0][0]
                     end_trim = nonsilent_ranges[-1][1]
+                    # 截取非静音部分的音频
                     audio = audio[start_trim:end_trim]
 
+            # 如果音量调整倍数不是 1.0，进行音量调整
             if volume_multiplier != 1.0:
                 audio = self.volume_safely(audio, volume_multiplier=volume_multiplier)
-            # 保存调整后的音频
+
+            # 导出处理后的音频文件为 WAV 格式
             audio.export(wav_path, format="wav")
 
             return wav_path
         except Exception as e:
+            # 捕获并抛出任何在处理过程中发生的异常
             raise Exception(f"{upload_file.filename}音频文件保存或转换失败: {str(e)}")
-            

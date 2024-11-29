@@ -123,7 +123,7 @@ if(__name__=='__main__'):
                         default=8119)
     args = parser.parse_args()
     try:
-        uvicorn.run(app="inference_subtitle_api:app", host="0.0.0.0", port=args.port, workers=1, reload=True, log_level="info")
+        uvicorn.run(app="api:app", host="0.0.0.0", port=args.port, workers=1, reload=True, log_level="info")
     except Exception as e:
         TextProcessor.log_error(e)
         print(e)

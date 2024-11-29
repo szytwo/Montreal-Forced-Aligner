@@ -1,9 +1,10 @@
 import os
 import subprocess
+import shutil
 from textgrid import TextGrid
 from datetime import timedelta
 from pathlib import Path
-from custom.file_utils import logging
+from custom.file_utils import logging, get_full_path
 from custom.TextProcessor import TextProcessor
 
 class MfaAlignProcessor:
@@ -30,27 +31,39 @@ class MfaAlignProcessor:
         :param audio_path: 包含音频文件的路径
         :param text: 文本
         """
+        input_dir = get_full_path(self.input_dir)
+        output_dir = get_full_path(self.output_dir)
+        model_dir = get_full_path(self.model_dir)
+        audio_path = get_full_path(audio_path)
+
         language = TextProcessor.detect_language(text)
         # 根据语言选择模型和字典路径
         if language == 'zh-cn':
-            dictionary_path = os.path.join(self.model_dir, 'dictionary', 'mandarin_china_mfa.dict')
-            model_path = os.path.join(self.model_dir, 'acoustic', 'mandarin_mfa.zip')
+            dictionary_name = 'mandarin_china_mfa.dict'
+            acoustic_name = 'mandarin_mfa.zip'
         elif language == 'en':
-            dictionary_path = os.path.join(self.model_dir, 'dictionary', 'english_uk_mfa.dict')
-            model_path = os.path.join(self.model_dir, 'acoustic', 'english_mfa.zip')
+            dictionary_name = 'english_uk_mfa.dict'
+            acoustic_name = 'english_mfa.zip'
         else:
             raise ValueError(f"Unsupported language: {language}")
+        
+        dictionary_path = os.path.join(model_dir, 'dictionary', dictionary_name)
+        model_path = os.path.join(model_dir, 'acoustic', acoustic_name)
         # 获取音频文件名（不带扩展名）
         audio_name = Path(audio_path).stem
         # 创建输入和输出子目录
-        input_subdir = os.path.join(self.input_dir, audio_name)
-        output_subdir = os.path.join(self.output_dir, audio_name)
+        input_subdir = os.path.join(input_dir, audio_name)
+        output_subdir = os.path.join(output_dir, audio_name)
         os.makedirs(input_subdir, exist_ok=True)
         os.makedirs(output_subdir, exist_ok=True)
         # 将音频文件复制到输入子目录
         input_audio_path = os.path.join(input_subdir, Path(audio_path).name)
         if not os.path.exists(input_audio_path):
-            os.system(f'copy "{audio_path}" "{input_audio_path}"') 
+            try:
+                shutil.copy(audio_path, input_audio_path)  # 使用 shutil 进行文件复制
+                logging.info(f"文件已复制到: {input_audio_path}")
+            except Exception as e:
+                logging.error(f"复制文件时出错: {e}")
         # 将文本写入到输入子目录
         text_path = os.path.join(input_subdir, f"{audio_name}.txt")
         with open(text_path, 'w', encoding='utf-8') as text_file:
@@ -87,7 +100,7 @@ class MfaAlignProcessor:
             logging.error(e.stderr)
 
     # 格式化时间为 hh:mm:ss,SSS
-    def format_time(seconds):
+    def format_time(self, seconds):
         td = timedelta(seconds=seconds)
         total_seconds = int(td.total_seconds())
         milliseconds = int((td.total_seconds() - total_seconds) * 1000)

@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import json
 import torchaudio
 import logging
@@ -60,3 +61,6 @@ def load_wav(wav, target_sr):
         assert sample_rate > target_sr, 'wav sample rate {} must be greater than {}'.format(sample_rate, target_sr)
         speech = torchaudio.transforms.Resample(orig_freq=sample_rate, new_freq=target_sr)(speech)
     return speech
+
+def get_full_path(path):
+    return os.path.abspath(path) if not os.path.isabs(path) else path

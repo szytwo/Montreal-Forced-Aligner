@@ -15,6 +15,9 @@ from custom.VideoProcessor import VideoProcessor
 # 需要安装ImageMagick并在环境变量中配置IMAGEMAGICK_BINARY的路径，或者运行时动态指定
 # https://imagemagick.org/script/download.php
 # os.environ['IMAGEMAGICK_BINARY'] = r"C:\Program Files\ImageMagick-7.1.0-Q16-HDRI\magick.exe"
+# mfa model download dictionary mandarin_china_mfa
+# mfa model download acoustic mandarin_mfa
+
 
 #设置允许访问的域名
 origins = ["*"]  #"*"，即为所有。

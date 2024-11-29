@@ -153,12 +153,11 @@ class AudioProcessor:
         # 如果文件格式不是 WAV，准备转换为 WAV 格式
         if upload_path.suffix.lower() != ".wav":
             # 创建转换后的 WAV 文件路径
-            wav_path = upload_path.with_stem(f"{upload_path.stem}_new").with_suffix(".wav")
+            wav_path = str(upload_path.with_stem(f"{upload_path.stem}_new").with_suffix(".wav"))
         else:
-            wav_path = upload_path
+            wav_path = str(upload_path)
         # 返回字符串路径
         upload_path = str(upload_path)  
-        wav_path = str(wav_path)
 
         logging.info(f"接收上传{upload_file.filename}请求 {upload_path}")
 

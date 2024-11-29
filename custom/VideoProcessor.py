@@ -27,12 +27,9 @@ class VideoProcessor:
         video_dir = os.path.join(self.temp_dir, video_name)
         os.makedirs(video_dir, exist_ok=True)  # 创建目录（如果不存在）
         upload_path = os.path.join(video_dir, upload_file.filename)
-        # 将路径对象化，方便后续操作
-        upload_path = Path(upload_path)
         # 如果同名文件已存在，先删除
         if os.path.exists(upload_path):
             os.remove(upload_path)
-        upload_path = str(upload_path)  
 
         logging.info(f"接收上传 {upload_file.filename} 请求 {upload_path}")
 
@@ -191,8 +188,6 @@ class VideoProcessor:
         :param opacity: 字幕透明度 (0-255)
         :return: 输出视频的路径
         """
-        video_file = get_full_path(video_file)
-        audio_file = get_full_path(audio_file)
 
         if not os.path.exists(video_file):
             raise FileNotFoundError(f"视频文件不存在: {video_file}")

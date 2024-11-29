@@ -72,8 +72,8 @@ class MfaAlignProcessor:
 
             return srt_file
         except subprocess.CalledProcessError as e:
-            logging.error("Error during alignment:")
-            logging.error(e.stderr)
+            # 捕获并抛出任何在处理过程中发生的异常
+            raise Exception(f"Error during alignment: {e.stderr}")
 
     # 格式化时间为 hh:mm:ss,SSS
     def format_time(self, seconds):

@@ -1,6 +1,7 @@
 import os
 import uuid
 import numpy as np
+from pathlib import Path
 from pydub import AudioSegment
 from pydub.silence import detect_nonsilent
 from noisereduce import reduce_noise
@@ -8,16 +9,14 @@ from fastapi import UploadFile
 from custom.file_utils import logging
 
 class AudioProcessor:
-    def __init__(self, input_dir="results/input", output_dir="results/output"):
+    def __init__(self, 
+                 temp_dir="results/"):
         """
-        初始化音频处理器。
-        :param input_dir: 输入文件目录
-        :param output_dir: 输出文件目录
+        初始化音频处理器，设置临时文件目录。
+        :param temp_dir: 临时目录，用于保存生成的中间文件或输出文件。
         """
-        self.input_dir = input_dir
-        self.output_dir = output_dir
-        os.makedirs(input_dir, exist_ok=True)
-        os.makedirs(output_dir, exist_ok=True)
+        self.temp_dir = temp_dir
+        os.makedirs(temp_dir, exist_ok=True)  # 创建临时目录（如果不存在）
     
     @staticmethod
     def volume_safely(audio: AudioSegment, volume_multiplier: float = 1.0) -> AudioSegment:
@@ -42,7 +41,7 @@ class AudioProcessor:
 
         return audio
 
-    def generate_wav(self, audio_data, sample_rate, delay=0.0, volume_multiplier = 1.0):
+    def generate_wav(self, audio_name , audio_data, sample_rate, delay=0.0, volume_multiplier = 1.0):
         """
         使用 pydub 将音频数据转换为 WAV 格式，并支持添加延迟。
         :param audio_data: numpy 数组，音频数据
@@ -89,9 +88,10 @@ class AudioProcessor:
         if volume_multiplier != 1.0:
             # 安全地增加音量
             audio_segment = self.volume_safely(audio_segment, volume_multiplier)
-        # 指定保存文件的路径
-        filename = f"{str(uuid.uuid4())}.wav"
-        wav_path = os.path.join(self.output_dir, filename)
+        # 构建保存路径
+        audio_dir = os.path.join(self.temp_dir, audio_name)
+        os.makedirs(audio_dir, exist_ok=True)  # 创建目录（如果不存在）
+        wav_path = os.path.join(audio_dir, f"{audio_name}_output.wav")
         # 如果文件已存在，先删除
         if os.path.exists(wav_path):
             os.remove(wav_path)
@@ -124,14 +124,19 @@ class AudioProcessor:
             reduce_noise_enabled: bool = True
         ):
         """保存上传文件并转换为 WAV 格式（如果需要）"""
-        # 构造文件路径
-        upload_path = os.path.join(self.input_dir, f'{prefix}{upload_file.filename}')
+        # 从上传文件名提取基础名称（无扩展名）
+        audio_name = Path(upload_file.filename).stem
+        # 构建保存路径
+        audio_dir = os.path.join(self.temp_dir, audio_name)
+        os.makedirs(audio_dir, exist_ok=True)  # 创建目录（如果不存在）
+        upload_path = os.path.join(audio_dir, f'{prefix}{upload_file.filename}')
         # 删除同名已存在的文件
         if os.path.exists(upload_path):
             os.remove(upload_path)
         # 检查文件格式并转换为 WAV（如果需要）
-        if not upload_path.lower().endswith(".wav"):
-            wav_path = f"{os.path.splitext(upload_path)[0]}_new.wav"
+        upload_path = Path(upload_path)  # 将上传路径转换为 Path 对象
+        if upload_path.suffix.lower() != ".wav":  # 检查文件扩展名
+            wav_path = upload_path.with_stem(f"{upload_path.stem}_new").with_suffix(".wav")
         else:
             wav_path = upload_path
 

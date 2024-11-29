@@ -27,7 +27,6 @@ class VideoProcessor:
         video_dir = os.path.join(self.temp_dir, video_name)
         os.makedirs(video_dir, exist_ok=True)  # 创建目录（如果不存在）
         upload_path = os.path.join(video_dir, upload_file.filename)
-        
         # 如果同名文件已存在，先删除
         if os.path.exists(upload_path):
             os.remove(upload_path)
@@ -99,14 +98,12 @@ class VideoProcessor:
                         subtitles.append((start, end.strip(), text.strip()))
         except Exception as e:
             raise RuntimeError(f"读取字幕文件失败: {subtitle_file}") from e
-
         # 创建字幕片段
         subtitle_clips = []
         for start, end, text in subtitles:
             try:
                 start_seconds = self.parse_srt_timestamp(start)
                 end_seconds = self.parse_srt_timestamp(end)
-
                 # 创建单个字幕文本片段
                 text_clip = TextClip(
                     text,
@@ -160,17 +157,14 @@ class VideoProcessor:
             raise FileNotFoundError(f"视频文件不存在: {video_file}")
         if audio_file and not os.path.exists(audio_file):
             raise FileNotFoundError(f"音频文件不存在: {audio_file}")
-
         # 加载视频文件
         video_clip = VideoFileClip(video_file)
         video_width = video_clip.w  # 获取视频宽度
-
         # 可选：替换音频
         if add_audio and audio_file:
             video_clip = video_clip.without_audio()
             audio_clip = AudioFileClip(audio_file)
             video_clip = video_clip.set_audio(audio_clip)
-
         # 如果没有提供字幕文件，使用 MFA 对齐生成
         if not subtitle_file and prompt_text:
             mfa_align_processor = MfaAlignProcessor()
@@ -181,7 +175,6 @@ class VideoProcessor:
                 min_line_length=0,
                 max_line_length=maxsize,
             )
-
         # 创建字幕片段
         subtitle_clips = self.create_subtitle_clip(
             subtitle_file=subtitle_file,
@@ -192,15 +185,12 @@ class VideoProcessor:
             stroke_color=stroke_color,
             stroke_width=stroke_width,
         )
-
         # 合成视频
         final_clip = CompositeVideoClip([video_clip] + subtitle_clips)
-
         # 输出文件路径
         video_dir = Path(video_file).parent
         os.makedirs(video_dir, exist_ok=True)
-        output_video = os.path.join(video_dir, f"output_{Path(video_file).name}")
-
+        output_video = os.path.join(video_dir, f"{Path(video_file).stem}_output{Path(video_file).suffix}")
         # 保存视频
         final_clip.write_videofile(output_video, codec="libx264", audio_codec="aac", fps=video_clip.fps)
 

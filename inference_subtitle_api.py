@@ -79,7 +79,7 @@ async def process_video(
                                 upload_file = video
                             )
         
-        if srt:
+        if srt is not None and not isinstance(srt, UploadFile):  # 检查是否上传了文件
             subtitle_file = await video_processor.save_upload_to_srt(
                                     upload_file = srt
                                 )
@@ -92,6 +92,7 @@ async def process_video(
                                 reduce_noise_enabled = False
                             )
     except Exception as e:
+        TextProcessor.log_error(e)
         return JSONResponse({"errcode": -1, "errmsg": str(e)})
 
     video_path =video_processor.video_subtitle(

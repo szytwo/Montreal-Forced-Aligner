@@ -10,21 +10,13 @@ from custom.TextProcessor import TextProcessor
 
 class MfaAlignProcessor:
     def __init__(self, 
-                 input_dir="results/input", 
-                 output_dir="results/output", 
                  model_dir="MFA/pretrained_models"
         ):
         """
         初始化MFA音频与文本对齐处理器。
-        :param input_dir: 输入文件目录
-        :param output_dir: 输出文件目录
         :param model_dir: 模型文件目录
         """
-        self.input_dir = input_dir
-        self.output_dir = output_dir
         self.model_dir = model_dir
-        os.makedirs(input_dir, exist_ok=True)
-        os.makedirs(output_dir, exist_ok=True)
 
     def align_audio_with_text(self, audio_path, text, min_line_length=0, max_line_length=40):
         """
@@ -32,11 +24,6 @@ class MfaAlignProcessor:
         :param audio_path: 包含音频文件的路径
         :param text: 文本
         """
-        input_dir = get_full_path(self.input_dir)
-        output_dir = get_full_path(self.output_dir)
-        model_dir = get_full_path(self.model_dir)
-        audio_path = get_full_path(audio_path)
-
         language = TextProcessor.detect_language(text)
         # 根据语言选择模型和字典路径
         if language == 'zh-cn':
@@ -48,34 +35,24 @@ class MfaAlignProcessor:
         else:
             raise ValueError(f"Unsupported language: {language}")
         
+        model_dir = get_full_path(self.model_dir)
         dictionary_path = os.path.join(model_dir, 'dictionary', dictionary_name)
         model_path = os.path.join(model_dir, 'acoustic', acoustic_name)
-        # 获取音频文件名（不带扩展名）
-        audio_name = Path(audio_path).stem
-        # 创建输入和输出子目录
-        input_subdir = os.path.join(input_dir, audio_name)
-        output_subdir = os.path.join(output_dir, audio_name)
-        os.makedirs(input_subdir, exist_ok=True)
-        os.makedirs(output_subdir, exist_ok=True)
-        # 将音频文件复制到输入子目录
-        input_audio_path = os.path.join(input_subdir, Path(audio_path).name)
-        if not os.path.exists(input_audio_path):
-            try:
-                shutil.copy(audio_path, input_audio_path)  # 使用 shutil 进行文件复制
-                logging.info(f"copy to: {input_audio_path}")
-            except Exception as e:
-                logging.error(f"copy error: {e}")
+        # 构建保存路径
+        audio_path = get_full_path(audio_path)
+        audio_dir = Path(audio_path).parent
+        audio_name = Path(audio_path).stem # 获取音频文件名（不带扩展名）
         # 将文本写入到输入子目录
-        text_path = os.path.join(input_subdir, f"{audio_name}.txt")
+        text_path = os.path.join(audio_dir, f"{audio_name}.txt")
         with open(text_path, 'w', encoding='utf-8') as text_file:
             text_file.write(text)
         # 构造 MFA 命令
         command = [
             "mfa", "align",
-            input_subdir,  # 音频文件目录
+            audio_dir,  # 音频文件目录
             dictionary_path,  # 字典文件路径
             model_path,  # 声学模型路径
-            output_subdir,   # 输出结果目录
+            audio_dir,   # 输出结果目录
             "--clean",
             "--final_clean",
             "--overwrite"
@@ -86,11 +63,11 @@ class MfaAlignProcessor:
             result = subprocess.run(command, capture_output=True, text=True, check=True)
             # 打印 MFA 的输出日志
             logging.info("Alignment completed successfully!")
-            logging.info(f"Output Directory: {output_subdir}")
+            logging.info(f"Output Directory: {audio_dir}")
             logging.info(f"MFA Output:\n {result.stdout}")
             # 查找生成的 TextGrid 文件
-            textgrid_file = os.path.join(output_subdir, f"{audio_name}.TextGrid")
-            srt_file = os.path.join(output_subdir, f"{audio_name}.srt")
+            textgrid_file = os.path.join(audio_dir, f"{audio_name}.TextGrid")
+            srt_file = os.path.join(audio_dir, f"{audio_name}.srt")
             # 将 TextGrid 文件转换为 SRT 文件
             self.textgrid_to_srt(textgrid_file, srt_file, min_line_length, max_line_length)
 

@@ -62,7 +62,10 @@ async def process_video(
     font_color: str = Form(default='yellow', description="字体颜色"),
     stroke_color: str = Form(default='yellow', description="描边颜色"),
     stroke_width: int = Form(default=0, description="描边宽度"),
+    bottom: int = Form(default=10, description="字幕与视频底部的距离"),
+    opacity: int = Form(default=0, description="字幕透明度 (0-255)"),
     srt: UploadFile = File(default=None, description="上传的字幕文件(可选，不传则自动生成)"),
+    add_audio: bool = Form(default=False, description="是否添加音频到视频"),
 ):
     """
     处理视频和音频，生成带有字幕的视频。
@@ -99,13 +102,15 @@ async def process_video(
         video_file = video_upload,
         audio_file = audio_upload,
         prompt_text = prompt_text,
-        add_audio = False,
+        add_audio = add_audio,
         subtitle_file = subtitle_file,
         font = font,
         font_size = font_size,
         font_color = font_color,
         stroke_color = stroke_color,
-        stroke_width = stroke_width
+        stroke_width = stroke_width,
+        bottom = bottom, 
+        opacity = opacity
     ) 
     # 返回视频响应
     return JSONResponse({"errcode": 0, "errmsg": "ok", "video_path": video_path})

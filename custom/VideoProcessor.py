@@ -1,8 +1,9 @@
 import os
+import gc
 from pathlib import Path
 from fastapi import UploadFile
 from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip, AudioFileClip
-from custom.file_utils import logging
+from custom.file_utils import logging, get_full_path
 from custom.MfaAlignProcessor import MfaAlignProcessor
 
 class VideoProcessor:
@@ -92,6 +93,8 @@ class VideoProcessor:
         font_color: str = "yellow",
         stroke_color: str = "yellow",
         stroke_width: int = 0,
+        bottom: int = 10, 
+        opacity: int = 0
     ) -> list:
         """
         从 SRT 字幕文件创建字幕片段列表。
@@ -102,6 +105,8 @@ class VideoProcessor:
         :param font_color: 字体颜色
         :param stroke_color: 描边颜色
         :param stroke_width: 描边宽度
+        :param bottom: 字幕与视频底部的距离
+        :param opacity: 字幕透明度 (0-255)
         :return: 字幕片段列表
         """
         if not os.path.exists(subtitle_file):
@@ -145,7 +150,7 @@ class VideoProcessor:
                 )
                 text_clip = text_clip.set_start(start_seconds)
                 text_clip = text_clip.set_duration(end_seconds - start_seconds)
-                text_clip = text_clip.set_position(('center', 'bottom')).margin(bottom=10, opacity=0)
+                text_clip = text_clip.set_position(('center', 'bottom')).margin(bottom=bottom, opacity=opacity)
 
                 subtitle_clips.append(text_clip)
             except Exception as e:
@@ -165,6 +170,8 @@ class VideoProcessor:
         font_color: str = "yellow",
         stroke_color: str = "yellow",
         stroke_width: int = 0,
+        bottom: int = 10, 
+        opacity: int = 0
     ) -> str:
         """
         给视频添加字幕（以及可选的音频）并输出。
@@ -178,47 +185,72 @@ class VideoProcessor:
         :param font_color: 字体颜色
         :param stroke_color: 描边颜色
         :param stroke_width: 描边宽度
+        :param bottom: 字幕与视频底部的距离
+        :param opacity: 字幕透明度 (0-255)
         :return: 输出视频的路径
         """
+        audio_file = get_full_path(audio_file)
         if not os.path.exists(video_file):
             raise FileNotFoundError(f"视频文件不存在: {video_file}")
         if audio_file and not os.path.exists(audio_file):
             raise FileNotFoundError(f"音频文件不存在: {audio_file}")
-        # 加载视频文件
-        video_clip = VideoFileClip(video_file)
-        video_width = video_clip.w  # 获取视频宽度
-        # 可选：替换音频
-        if add_audio and audio_file:
-            video_clip = video_clip.without_audio()
-            audio_clip = AudioFileClip(audio_file)
-            video_clip = video_clip.set_audio(audio_clip)
-        # 如果没有提供字幕文件，使用 MFA 对齐生成
-        if not subtitle_file and prompt_text:
-            mfa_align_processor = MfaAlignProcessor()
-            maxsize = video_width / font_size - 2  # 每行最大字符数
-            subtitle_file = mfa_align_processor.align_audio_with_text(
-                audio_path=audio_file,
-                text=prompt_text,
-                min_line_length=0,
-                max_line_length=maxsize,
-            )
-        # 创建字幕片段
-        subtitle_clips = self.create_subtitle_clip(
-            subtitle_file=subtitle_file,
-            video_width=video_width,
-            font=font,
-            font_size=font_size,
-            font_color=font_color,
-            stroke_color=stroke_color,
-            stroke_width=stroke_width,
-        )
-        # 合成视频
-        final_clip = CompositeVideoClip([video_clip] + subtitle_clips)
-        # 输出文件路径
-        video_dir = Path(video_file).parent
-        os.makedirs(video_dir, exist_ok=True)
-        output_video = os.path.join(video_dir, f"{Path(video_file).stem}_output{Path(video_file).suffix}")
-        # 保存视频
-        final_clip.write_videofile(output_video, codec="libx264", audio_codec="aac", fps=video_clip.fps)
+        video_clip = None
+        audio_clip = None
+        final_clip = None
 
-        return output_video
+        try:
+            # 加载视频文件
+            video_clip = VideoFileClip(video_file)
+            video_width = video_clip.w  # 获取视频宽度
+            # 可选：替换音频
+            if add_audio and audio_file:
+                video_clip = video_clip.without_audio()
+                audio_clip = AudioFileClip(audio_file)
+                video_clip = video_clip.set_audio(audio_clip)
+            # 如果没有提供字幕文件，使用 MFA 对齐生成
+            if not subtitle_file and prompt_text:
+                mfa_align_processor = MfaAlignProcessor()
+                maxsize = video_width / font_size - 2  # 每行最大字符数
+                subtitle_file = mfa_align_processor.align_audio_with_text(
+                    audio_path=audio_file,
+                    text=prompt_text,
+                    min_line_length=0,
+                    max_line_length=maxsize,
+                )
+            # 创建字幕片段
+            subtitle_clips = self.create_subtitle_clip(
+                subtitle_file=subtitle_file,
+                video_width=video_width,
+                font=font,
+                font_size=font_size,
+                font_color=font_color,
+                stroke_color=stroke_color,
+                stroke_width=stroke_width,
+                bottom = bottom, 
+                opacity = opacity
+            )
+            # 合成视频
+            final_clip = CompositeVideoClip([video_clip] + subtitle_clips)
+            # 输出文件路径
+            video_dir = Path(video_file).parent
+            os.makedirs(video_dir, exist_ok=True)
+            output_video = os.path.join(video_dir, f"{Path(video_file).stem}_output{Path(video_file).suffix}")
+            # 保存视频
+            final_clip.write_videofile(output_video, codec="libx264", audio_codec="aac", fps=video_clip.fps)
+
+            return output_video
+        except Exception as e:
+            # 捕获异常并记录
+            logging.error(f"处理视频时发生错误: {str(e)}")
+            # 如果需要重新抛出以让外部感知异常
+            raise e
+        finally:
+            # 确保资源被释放
+            if final_clip:
+                final_clip.close()
+            if video_clip:
+                video_clip.close()
+            if audio_clip:
+                audio_clip.close()
+            # 强制清理资源
+            gc.collect()

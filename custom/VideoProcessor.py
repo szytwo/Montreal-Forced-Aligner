@@ -32,6 +32,7 @@ class VideoProcessor:
         # 如果同名文件已存在，先删除
         if os.path.exists(upload_path):
             os.remove(upload_path)
+        upload_path = str(upload_path)  
 
         logging.info(f"接收上传 {upload_file.filename} 请求 {upload_path}")
 
@@ -192,7 +193,7 @@ class VideoProcessor:
         """
         video_file = get_full_path(video_file)
         audio_file = get_full_path(audio_file)
-        
+
         if not os.path.exists(video_file):
             raise FileNotFoundError(f"视频文件不存在: {video_file}")
         if audio_file and not os.path.exists(audio_file):

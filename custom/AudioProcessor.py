@@ -156,6 +156,9 @@ class AudioProcessor:
             wav_path = upload_path.with_stem(f"{upload_path.stem}_new").with_suffix(".wav")
         else:
             wav_path = upload_path
+        # 返回字符串路径
+        upload_path = str(upload_path)  
+        wav_path = str(wav_path)
 
         logging.info(f"接收上传{upload_file.filename}请求 {upload_path}")
 

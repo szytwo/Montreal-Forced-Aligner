@@ -41,6 +41,33 @@ class VideoProcessor:
             return upload_path
         except Exception as e:
             raise Exception(f"{upload_file.filename} 视频文件保存失败: {str(e)}")
+        
+    async def save_upload_to_srt(self, upload_file: UploadFile):
+        """
+        保存上传的文件到本地并返回路径。
+        :param upload_file: FastAPI 的上传文件对象
+        :return: 保存后的文件路径
+        """
+        # 从上传文件名提取基础名称（无扩展名）
+        srt_name = Path(upload_file.filename).stem
+        # 构建保存路径
+        srt_dir = os.path.join(self.temp_dir, srt_name)
+        os.makedirs(srt_dir, exist_ok=True)  # 创建目录（如果不存在）
+        upload_path = os.path.join(srt_dir, upload_file.filename)
+        # 如果同名文件已存在，先删除
+        if os.path.exists(upload_path):
+            os.remove(upload_path)
+
+        logging.info(f"接收上传 {upload_file.filename} 请求 {upload_path}")
+
+        try:
+            # 异步保存上传的文件内容
+            with open(upload_path, "wb") as f:
+                f.write(await upload_file.read())  # 异步读取并写入文件
+
+            return upload_path
+        except Exception as e:
+            raise Exception(f"{upload_file.filename} 字幕文件保存失败: {str(e)}")
 
     @staticmethod
     def parse_srt_timestamp(timestamp: str) -> float:

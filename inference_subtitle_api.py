@@ -1,6 +1,6 @@
 import argparse
 import uvicorn
-from fastapi import FastAPI, UploadFile, Form
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -54,24 +54,35 @@ async def test():
 
 @app.post("/process_video/")
 async def process_video(
-    video: UploadFile,
-    audio: UploadFile,
-    prompt_text: str = Form(...),
-    font: str = Form(default='fonts/yahei.ttf'),
-    font_size: int = Form(default=70),
-    font_color: str = Form(default='yellow'),
-    stroke_color: str = Form(default='yellow'),
-    stroke_width: int = Form(default=0),
-    srt: UploadFile = None,
+    video: UploadFile = File(..., description="上传的视频文件"),
+    audio: UploadFile = File(..., description="上传的音频文件"),
+    prompt_text: str = Form(..., description="提供的文本提示，必填"),
+    font: str = Form(default='fonts/yahei.ttf', description="字体路径"),
+    font_size: int = Form(default=70, description="字体大小"),
+    font_color: str = Form(default='yellow', description="字体颜色"),
+    stroke_color: str = Form(default='yellow', description="描边颜色"),
+    stroke_width: int = Form(default=0, description="描边宽度"),
+    srt: UploadFile = File(default=None, description="上传的字幕文件(可选，不传则自动生成)"),
 ):
+    """
+    处理视频和音频，生成带有字幕的视频。
+    返回：
+        JSONResponse: 包含处理结果的 JSON 响应。
+    """
     # 初始化处理器
     video_processor = VideoProcessor()
     audio_processor = AudioProcessor()
+    subtitle_file = None
 
     try:
         video_upload = await video_processor.save_upload_to_video(
                                 upload_file = video
                             )
+        
+        if srt:
+            subtitle_file = await video_processor.save_upload_to_srt(
+                                    upload_file = srt
+                                )
         
         audio_upload = await audio_processor.save_upload_to_wav(
                                 upload_file = audio, 
@@ -88,7 +99,7 @@ async def process_video(
         audio_file = audio_upload,
         prompt_text = prompt_text,
         add_audio = False,
-        subtitle_file = None,
+        subtitle_file = subtitle_file,
         font = font,
         font_size = font_size,
         font_color = font_color,

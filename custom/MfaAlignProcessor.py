@@ -1,6 +1,7 @@
 import os
 import subprocess
 import shutil
+import re
 from textgrid import TextGrid
 from datetime import timedelta
 from pathlib import Path
@@ -25,7 +26,7 @@ class MfaAlignProcessor:
         os.makedirs(input_dir, exist_ok=True)
         os.makedirs(output_dir, exist_ok=True)
 
-    def align_audio_with_text(self, audio_path, text, max_line_length=40):
+    def align_audio_with_text(self, audio_path, text, min_line_length=0, max_line_length=40):
         """
         使用 MFA 进行音频与文本对齐
         :param audio_path: 包含音频文件的路径
@@ -61,9 +62,9 @@ class MfaAlignProcessor:
         if not os.path.exists(input_audio_path):
             try:
                 shutil.copy(audio_path, input_audio_path)  # 使用 shutil 进行文件复制
-                logging.info(f"文件已复制到: {input_audio_path}")
+                logging.info(f"copy to: {input_audio_path}")
             except Exception as e:
-                logging.error(f"复制文件时出错: {e}")
+                logging.error(f"copy error: {e}")
         # 将文本写入到输入子目录
         text_path = os.path.join(input_subdir, f"{audio_name}.txt")
         with open(text_path, 'w', encoding='utf-8') as text_file:
@@ -91,7 +92,7 @@ class MfaAlignProcessor:
             textgrid_file = os.path.join(output_subdir, f"{audio_name}.TextGrid")
             srt_file = os.path.join(output_subdir, f"{audio_name}.srt")
             # 将 TextGrid 文件转换为 SRT 文件
-            self.textgrid_to_srt(textgrid_file, srt_file, max_line_length)
+            self.textgrid_to_srt(textgrid_file, srt_file, min_line_length, max_line_length)
 
             return srt_file
         except subprocess.CalledProcessError as e:
@@ -108,7 +109,16 @@ class MfaAlignProcessor:
         seconds = total_seconds % 60
         return f"{hours:02}:{minutes:02}:{seconds:02},{milliseconds:03}"
 
-    def textgrid_to_srt(self, textgrid_path, output_srt_path, max_line_length=40):
+    def is_english(self, word):
+        """
+        判断给定的单词是否为英文单词
+        :param word: 输入的单词
+        :return: 如果是英文返回 True，否则返回 False
+        """
+        # 判断是否包含英文字符 (使用正则表达式检查是否有英文字符)
+        return bool(re.match(r'[A-Za-z0-9]+$', word))
+    
+    def textgrid_to_srt(self, textgrid_path, output_srt_path, min_line_length=0, max_line_length=40):
         """
         将 TextGrid 文件转换为 SRT 字幕文件
 
@@ -116,7 +126,6 @@ class MfaAlignProcessor:
         :param output_srt_path: 输出的 SRT 文件路径
         :param min_gap: 如果两个标注的时间间隔大于这个值，则开始新的字幕条目
         """
-
         tg = TextGrid.fromFile(textgrid_path)
         tier = tg[0]  # 假设对齐文本在第一个层级
 
@@ -134,11 +143,14 @@ class MfaAlignProcessor:
             end_time = interval.maxTime
             
             if word:
+                # 判断是中文还是英文并处理
+                if self.is_english(word) and current_length > 0:
+                    word = ' ' + word  # 英文单词前加空格
                 # 增加当前单词到字幕行
                 current_subtitle.append(word)
                 current_length += len(word)
             # 如果无文字或长度超出限制，则分行
-            if not word or current_length >= max_line_length:
+            if (not word and current_length >=min_line_length) or current_length >= max_line_length:
                 if current_subtitle:  # 确保当前字幕行非空
                     subtitle_text = ''.join(current_subtitle)
                     subtitles.append((subtitle_id, start_time, end_time, subtitle_text))

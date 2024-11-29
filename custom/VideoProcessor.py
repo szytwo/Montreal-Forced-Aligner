@@ -1,5 +1,4 @@
 import os
-import gc
 from pathlib import Path
 from fastapi import UploadFile
 from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip, AudioFileClip
@@ -194,6 +193,7 @@ class VideoProcessor:
             raise FileNotFoundError(f"视频文件不存在: {video_file}")
         if audio_file and not os.path.exists(audio_file):
             raise FileNotFoundError(f"音频文件不存在: {audio_file}")
+        
         video_clip = None
         audio_clip = None
         final_clip = None
@@ -202,11 +202,6 @@ class VideoProcessor:
             # 加载视频文件
             video_clip = VideoFileClip(video_file)
             video_width = video_clip.w  # 获取视频宽度
-            # 可选：替换音频
-            if add_audio and audio_file:
-                video_clip = video_clip.without_audio()
-                audio_clip = AudioFileClip(audio_file)
-                video_clip = video_clip.set_audio(audio_clip)
             # 如果没有提供字幕文件，使用 MFA 对齐生成
             if not subtitle_file and prompt_text:
                 mfa_align_processor = MfaAlignProcessor()
@@ -231,6 +226,10 @@ class VideoProcessor:
             )
             # 合成视频
             final_clip = CompositeVideoClip([video_clip] + subtitle_clips)
+            # 可选：替换音频
+            if add_audio and audio_file:
+                audio_clip = AudioFileClip(audio_file)
+                final_clip = final_clip.without_audio().set_audio(audio_clip)
             # 输出文件路径
             video_dir = Path(video_file).parent
             os.makedirs(video_dir, exist_ok=True)
@@ -252,5 +251,3 @@ class VideoProcessor:
                 video_clip.close()
             if audio_clip:
                 audio_clip.close()
-            # 强制清理资源
-            gc.collect()

@@ -1,6 +1,5 @@
 import os
 import subprocess
-import shutil
 import re
 from textgrid import TextGrid
 from datetime import timedelta

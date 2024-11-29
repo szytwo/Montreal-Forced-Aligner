@@ -1,7 +1,8 @@
 import argparse
 import uvicorn
-from fastapi import FastAPI, File, UploadFile, Form
-from fastapi.responses import JSONResponse, PlainTextResponse
+from pathlib import Path
+from fastapi import FastAPI, File, UploadFile, Form, Query
+from fastapi.responses import JSONResponse, PlainTextResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_swagger_ui_html
 from starlette.middleware.cors import CORSMiddleware  #引入 CORS中间件模块
@@ -115,6 +116,15 @@ async def process_video(
     # 返回视频响应
     return JSONResponse({"errcode": 0, "errmsg": "ok", "video_path": video_path})
 
+@app.get('/download')
+async def download(
+    file_path:str = Query(..., description="输入文件路径"), 
+):    
+    """
+    文件下载接口。
+    """
+    file_name = Path(file_path).stem
+    return FileResponse(path=file_path, filename=file_name, media_type='application/octet-stream')
 
 if(__name__=='__main__'):
     parser = argparse.ArgumentParser()

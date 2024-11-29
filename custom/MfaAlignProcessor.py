@@ -25,7 +25,7 @@ class MfaAlignProcessor:
         os.makedirs(input_dir, exist_ok=True)
         os.makedirs(output_dir, exist_ok=True)
 
-    def align_audio_with_text(self, audio_path, text):
+    def align_audio_with_text(self, audio_path, text, max_line_length=40):
         """
         使用 MFA 进行音频与文本对齐
         :param audio_path: 包含音频文件的路径
@@ -83,16 +83,15 @@ class MfaAlignProcessor:
         try:
             # 调用 MFA
             result = subprocess.run(command, capture_output=True, text=True, check=True)
-
             # 打印 MFA 的输出日志
             logging.info("Alignment completed successfully!")
-            logging.info("Output Directory:", self.output_dir)
-            logging.info("MFA Output:\n", result.stdout)
+            logging.info(f"Output Directory: {output_subdir}")
+            logging.info(f"MFA Output:\n {result.stdout}")
             # 查找生成的 TextGrid 文件
             textgrid_file = os.path.join(output_subdir, f"{audio_name}.TextGrid")
             srt_file = os.path.join(output_subdir, f"{audio_name}.srt")
             # 将 TextGrid 文件转换为 SRT 文件
-            self.textgrid_to_srt(textgrid_file, srt_file)
+            self.textgrid_to_srt(textgrid_file, srt_file, max_line_length)
 
             return srt_file
         except subprocess.CalledProcessError as e:
@@ -109,7 +108,7 @@ class MfaAlignProcessor:
         seconds = total_seconds % 60
         return f"{hours:02}:{minutes:02}:{seconds:02},{milliseconds:03}"
 
-    def textgrid_to_srt(self, textgrid_path, output_srt_path, min_gap=2):
+    def textgrid_to_srt(self, textgrid_path, output_srt_path, max_line_length=40):
         """
         将 TextGrid 文件转换为 SRT 字幕文件
 
@@ -124,41 +123,40 @@ class MfaAlignProcessor:
         subtitles = []
         subtitle_id = 1
         current_subtitle = []
+        current_length = 0  # 当前字幕的总字符长度
         start_time = None
         end_time = None
 
         for interval in tier.intervals:
-            if interval.mark.strip():  # 仅处理非空标注
-                word = interval.mark.strip()
-                if start_time is None:
-                    start_time = interval.minTime
-                end_time = interval.maxTime
+            word = interval.mark.strip()
+            if start_time is None:
+                start_time = interval.minTime
+            end_time = interval.maxTime
+            
+            if word:
+                # 增加当前单词到字幕行
                 current_subtitle.append(word)
-                print(f"{interval.minTime} --> {interval.maxTime}")
-                # 检查时间间隔是否超出 min_gap
-                if end_time - start_time > min_gap:
+                current_length += len(word)
+            # 如果无文字或长度超出限制，则分行
+            if not word or current_length >= max_line_length:
+                if current_subtitle:  # 确保当前字幕行非空
                     subtitle_text = ''.join(current_subtitle)
                     subtitles.append((subtitle_id, start_time, end_time, subtitle_text))
                     subtitle_id += 1
-                    current_subtitle = []
+                    current_subtitle = []  # 重置当前字幕行
+                    current_length = 0
                     start_time = None
-                    end_time = None
-
         # 处理最后一个字幕条目
         if current_subtitle:
             subtitle_text = ''.join(current_subtitle)
             subtitles.append((subtitle_id, start_time, end_time, subtitle_text))
-
         # 写入 SRT 文件
         with open(output_srt_path, 'w', encoding='utf-8') as f:
             for subtitle in subtitles:
                 subtitle_id, start_time, end_time, text = subtitle
-
                 # 使用格式化函数
                 start_time_str = self.format_time(start_time)
                 end_time_str = self.format_time(end_time)
-                #print(start_time_str)
-                #print(end_time_str)
                 f.write(f"{subtitle_id}\n")
                 f.write(f"{start_time_str} --> {end_time_str}\n")
                 f.write(f"{text}\n\n")

@@ -126,7 +126,7 @@ async def download(
     """
     文件下载接口。
     """
-    file_name = Path(file_path).stem
+    file_name = Path(file_path).name
     return FileResponse(path=file_path, filename=file_name, media_type='application/octet-stream')
 
 if(__name__=='__main__'):

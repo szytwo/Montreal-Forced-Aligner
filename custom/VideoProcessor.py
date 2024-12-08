@@ -41,6 +41,8 @@ class VideoProcessor:
             return upload_path
         except Exception as e:
             raise Exception(f"{upload_file.filename} 视频文件保存失败: {str(e)}")
+        finally:
+            await upload_file.close()  # 显式关闭上传文件
         
     async def save_upload_to_srt(self, upload_file: UploadFile):
         """
@@ -68,6 +70,8 @@ class VideoProcessor:
             return upload_path
         except Exception as e:
             raise Exception(f"{upload_file.filename} 字幕文件保存失败: {str(e)}")
+        finally:
+            await upload_file.close()  # 显式关闭上传文件
 
     @staticmethod
     def parse_srt_timestamp(timestamp: str) -> float:

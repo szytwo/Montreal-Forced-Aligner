@@ -211,3 +211,5 @@ class AudioProcessor:
         except Exception as e:
             # 捕获并抛出任何在处理过程中发生的异常
             raise Exception(f"{upload_file.filename}音频文件保存或转换失败: {str(e)}")
+        finally:
+            await upload_file.close()  # 显式关闭上传文件

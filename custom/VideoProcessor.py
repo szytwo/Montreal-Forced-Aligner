@@ -116,9 +116,13 @@ class VideoProcessor:
         font_size = int(font_size * (video_width / reference_width))
         # 自动根据字体大小设置高度
         line_height_ratio = 1.2  # 行间距比例，通常 1.2-1.5 比较合适
-        max_lines = 3  # 最多显示 3 行
-        # 根据字体大小计算高度
-        calculated_height = int(font_size * max_lines * line_height_ratio)
+        single_line_height = int(font_size * line_height_ratio)  # 单行高度
+        max_lines = 3  # 最大行数
+        # 自动根据字体大小计算字幕高度
+        calculated_height = single_line_height * max_lines
+        min_bottom = 10  # 设定最小底部距离，避免过小或负数
+        # 自动适应bottom兼容多行，并确保不为负数或过小
+        bottom = max(min_bottom, bottom - (single_line_height * (max_lines - 1)))
 
         subtitles = []  # 用于存储解析后的字幕数据
         try:

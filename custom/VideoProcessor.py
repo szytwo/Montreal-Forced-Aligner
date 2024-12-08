@@ -111,6 +111,15 @@ class VideoProcessor:
         if not os.path.exists(subtitle_file):
             raise FileNotFoundError(f"字幕文件不存在: {subtitle_file}")
         
+        # 以 1280px 宽度的视频为参照，自动适配字体大小
+        reference_width = 1280
+        font_size = int(font_size * (video_width / reference_width))
+        # 自动根据字体大小设置高度
+        line_height_ratio = 1.2  # 行间距比例，通常 1.2-1.5 比较合适
+        max_lines = 3  # 最多显示 3 行
+        # 根据字体大小计算高度
+        calculated_height = int(font_size * max_lines * line_height_ratio)
+
         subtitles = []  # 用于存储解析后的字幕数据
         try:
             # 读取 SRT 文件内容并逐行解析
@@ -145,7 +154,7 @@ class VideoProcessor:
                     stroke_color=stroke_color,
                     stroke_width=stroke_width,
                     font=font,
-                    size=(video_width, None),
+                    size=(video_width, calculated_height),
                 )
                 text_clip = text_clip.set_start(start_seconds)
                 text_clip = text_clip.set_duration(end_seconds - start_seconds)

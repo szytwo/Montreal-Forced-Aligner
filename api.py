@@ -1,8 +1,8 @@
 import argparse
 import uvicorn
 from pathlib import Path
-from fastapi import FastAPI, File, UploadFile, Form, Query
-from fastapi.responses import JSONResponse, PlainTextResponse, FileResponse
+from fastapi import FastAPI, File, UploadFile, Form, Query, Request, status
+from fastapi.responses import JSONResponse, PlainTextResponse, FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_swagger_ui_html
 from starlette.middleware.cors import CORSMiddleware  #引入 CORS中间件模块
@@ -48,6 +48,33 @@ async def custom_swagger_ui_html():
         swagger_js_url="/static/swagger-ui/5.9.0/swagger-ui-bundle.js",
         swagger_css_url="/static/swagger-ui/5.9.0/swagger-ui.css",
     )
+
+# 自定义异常处理器
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logging.info(f"Exception during request {request.url}: {exc}")
+    # 记录错误信息
+    TextProcessor.log_error(exc)
+
+    return JSONResponse(
+        {"errcode": 500, "errmsg": "Internal Server Error"},
+        status_code=500
+    )
+
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    return """
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <meta charset=utf-8>
+            <title>Api information</title>
+        </head>
+        <body>
+            <a href='./docs'>Documents of API</a>
+        </body>
+    </html>
+    """
 
 @app.get('/test')
 async def test():

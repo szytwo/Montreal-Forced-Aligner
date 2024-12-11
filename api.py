@@ -102,7 +102,7 @@ async def process_video(
         TextProcessor.log_error(e)
         return JSONResponse({"errcode": -1, "errmsg": str(e)})
 
-    video_path =video_processor.video_subtitle(
+    video_path, subtitle_path = video_processor.video_subtitle(
         video_file = video_upload,
         audio_file = audio_upload,
         prompt_text = prompt_text,
@@ -115,9 +115,9 @@ async def process_video(
         stroke_width = stroke_width,
         bottom = bottom, 
         opacity = opacity
-    ) 
+    )
     # 返回视频响应
-    return JSONResponse({"errcode": 0, "errmsg": "ok", "video_path": video_path})
+    return JSONResponse({"errcode": 0, "errmsg": "ok", "video_path": video_path, "subtitle_path": subtitle_path})
 
 @app.get('/download')
 async def download(

@@ -254,7 +254,7 @@ class VideoProcessor:
             # 保存视频
             final_clip.write_videofile(output_video, codec="libx264", audio_codec="aac", fps=video_clip.fps)
 
-            return output_video
+            return output_video, subtitle_file
         except Exception as e:
             # 捕获异常并记录
             logging.error(f"处理视频时发生错误: {str(e)}")

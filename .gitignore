@@ -92,3 +92,9 @@ docs/source/api/
 *.lprof
 
 *.pclprof
+
+results/
+MFA/
+error/
+venv/
+example/

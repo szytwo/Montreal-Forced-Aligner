@@ -100,6 +100,13 @@ class MfaAlignProcessor:
         # 判断是否包含英文字符 (使用正则表达式检查是否有英文字符)
         return bool(re.match(r'[A-Za-z0-9]+$', word))
     
+    def remove_punctuation(text):
+        """
+        移除常用的中英文标点符号
+        """
+        punctuation_pattern = r'[，。！？；：、“”‘’（）《》【】,.!?;:"\'()<>[\]{}]'
+        return re.sub(punctuation_pattern, '', text)
+
     def textgrid_to_srt(self, textgrid_path, output_srt_path, min_line_length=0, max_line_length=40):
         """
         将 TextGrid 文件转换为 SRT 字幕文件
@@ -120,6 +127,7 @@ class MfaAlignProcessor:
 
         for interval in tier.intervals:
             word = interval.mark.strip()
+            word = self.remove_punctuation(word)  # 移除标点符号
             if start_time is None:
                 start_time = interval.minTime
             end_time = interval.maxTime

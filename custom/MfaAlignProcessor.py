@@ -99,8 +99,8 @@ class MfaAlignProcessor:
         """
         # 判断是否包含英文字符 (使用正则表达式检查是否有英文字符)
         return bool(re.match(r'[A-Za-z0-9]+$', word))
-    
-    def remove_punctuation(text):
+
+    def remove_punctuation(self, text):
         """
         移除常用的中英文标点符号
         """

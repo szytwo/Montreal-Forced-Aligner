@@ -252,7 +252,8 @@ class VideoProcessor:
             os.makedirs(video_dir, exist_ok=True)
             output_video = os.path.join(video_dir, f"{Path(video_file).stem}_output{Path(video_file).suffix}")
             # 保存视频
-            final_clip.write_videofile(output_video, codec="libx264", audio_codec="aac", fps=video_clip.fps)
+            # # NVIDIA 编码器 codec="h264_nvenc"    CPU编码 codec="libx264"
+            final_clip.write_videofile(output_video, codec="h264_nvenc", audio_codec="aac", fps=video_clip.fps)
 
             return output_video, subtitle_file
         except Exception as e:

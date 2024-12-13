@@ -45,20 +45,22 @@ class MfaAlignProcessor:
         text_path = os.path.join(audio_dir, f"{audio_name}.txt")
         with open(text_path, 'w', encoding='utf-8') as text_file:
             text_file.write(text)
+        logging.info(f"audio_dir: {audio_dir}")
         # 获取 CPU 核心数
         num_jobs = os.cpu_count()
         logging.info(f"num_jobs: {num_jobs}")
-        # 构造 MFA 命令
+        # 构造 MFA 命令，注意：在命令行参数解析时，每个选项与值应作为单独的列表项，否则不起作用
         command = [
             "mfa", "align",
             audio_dir,  # 音频文件目录
             dictionary_path,  # 字典文件路径
             model_path,  # 声学模型路径
             audio_dir,   # 输出结果目录
-            "--clean",
-            "--final_clean",
-            "--overwrite",
-            f"--num_jobs {num_jobs}"
+            f"--temporary_directory", audio_dir,  #临时目录
+            "--clean", # 清理运行前的旧文件
+            "--final_clean", # 清理运行后的临时文件
+            "--overwrite", # 覆盖旧输出
+            f"--num_jobs", str(num_jobs) # 使用 CPU 核心数
         ]
 
         try:

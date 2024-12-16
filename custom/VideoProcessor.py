@@ -1,8 +1,9 @@
 import os
+from tqdm import tqdm
 from pathlib import Path
 from fastapi import UploadFile
-from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip, AudioFileClip
-from custom.file_utils import logging, get_full_path
+from moviepy.editor import *
+from custom.file_utils import logging, get_full_path, add_suffix_to_filename
 from custom.MfaAlignProcessor import MfaAlignProcessor
 
 class VideoProcessor:
@@ -72,6 +73,29 @@ class VideoProcessor:
             raise Exception(f"{upload_file.filename} 字幕文件保存失败: {str(e)}")
         finally:
             await upload_file.close()  # 显式关闭上传文件
+
+    def convert_video_to_25fps(self, video_path):
+        """ 使用 MoviePy 将视频转换为 25 FPS """
+        # 检查视频帧率
+        clip = VideoFileClip(video_path)
+        fps = clip.fps
+
+        if fps != 25:
+            logging.info(f"视频帧率为 {fps}，转换为 25 FPS")
+
+            fps = 25
+            converted_video_path = add_suffix_to_filename(video_path, f"_{fps}")
+            # NVIDIA 编码器 codec="h264_nvenc"    CPU编码 codec="libx264"
+            clip.set_fps(fps).write_videofile(
+                converted_video_path, codec="h264_nvenc", audio_codec="aac", preset="fast"
+            )
+            video_path = converted_video_path
+
+            logging.info(f"视频转换完成: {video_path}")
+
+        clip.close()
+
+        return video_path, fps
 
     @staticmethod
     def parse_srt_timestamp(timestamp: str) -> float:
@@ -146,9 +170,10 @@ class VideoProcessor:
                         subtitles.append((start, end.strip(), text.strip()))
         except Exception as e:
             raise RuntimeError(f"读取字幕文件失败: {subtitle_file}") from e
-        # 创建字幕片段
+
+        logging.info(f"正在创建字幕片段...")
         subtitle_clips = []
-        for start, end, text in subtitles:
+        for start, end, text in tqdm(subtitles):
             try:
                 start_seconds = self.parse_srt_timestamp(start)
                 end_seconds = self.parse_srt_timestamp(end)
@@ -217,6 +242,7 @@ class VideoProcessor:
 
         try:
             # 加载视频文件
+            video_file, fps = self.convert_video_to_25fps(video_file)
             video_clip = VideoFileClip(video_file)
             video_width = video_clip.w  # 获取视频宽度
             # 如果没有提供字幕文件，使用 MFA 对齐生成
@@ -246,6 +272,20 @@ class VideoProcessor:
             # 可选：替换音频
             if add_audio and audio_file:
                 audio_clip = AudioFileClip(audio_file)
+                # 获取视频和音频的持续时间
+                video_duration = final_clip.duration
+                audio_duration = audio_clip.duration
+                logging.info(f"检查音频与视频长度：video_duration {video_duration} audio_duration {audio_duration}")
+
+                if audio_duration < video_duration:
+                    logging.info(f"视频更短，裁剪视频...")
+                    final_clip = final_clip.subclip(0, audio_duration)
+                elif audio_duration > video_duration:
+                    logging.info(f"音频更短，裁剪音频...")
+                    audio_clip = audio_clip.subclip(0, video_duration)
+                # 添加音频淡出效果，防止尾音
+                audio_clip = audio_clip.fx(afx.audio_fadeout, duration=0.2)
+
                 final_clip = final_clip.without_audio().set_audio(audio_clip)
             # 输出文件路径
             video_dir = Path(video_file).parent
@@ -253,7 +293,7 @@ class VideoProcessor:
             output_video = os.path.join(video_dir, f"{Path(video_file).stem}_output{Path(video_file).suffix}")
             # 保存视频
             # # NVIDIA 编码器 codec="h264_nvenc"    CPU编码 codec="libx264"
-            final_clip.write_videofile(output_video, codec="h264_nvenc", audio_codec="aac", fps=video_clip.fps)
+            final_clip.write_videofile(output_video, codec="h264_nvenc", audio_codec="aac", fps=final_clip.fps)
 
             return output_video, subtitle_file
         except Exception as e:

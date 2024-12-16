@@ -64,10 +64,11 @@ class MfaAlignProcessor:
         ]
 
         try:
+            logging.info(f"正在MFA 音频与文本对齐...")
             # 调用 MFA
             result = subprocess.run(command, capture_output=True, text=True, check=True)
             # 打印 MFA 的输出日志
-            logging.info("Alignment completed successfully!")
+            logging.info("MFA 音频与文本对齐完成!")
             logging.info(f"Output Directory: {audio_dir}")
             logging.info(f"MFA Output:\n {result.stdout}")
             # 查找生成的 TextGrid 文件

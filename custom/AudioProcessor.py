@@ -5,7 +5,7 @@ from pydub import AudioSegment
 from pydub.silence import detect_nonsilent
 from noisereduce import reduce_noise
 from fastapi import UploadFile
-from custom.file_utils import logging
+from custom.file_utils import logging, add_suffix_to_filename
 
 class AudioProcessor:
     def __init__(self, 
@@ -57,6 +57,7 @@ class AudioProcessor:
             num_silence_samples = int(delay * sample_rate)
             silence = np.zeros(num_silence_samples, dtype=audio_data.dtype)
             audio_data = np.concatenate((silence, audio_data), axis=0)
+
         # 检测音频数据类型并转换
         sample_width = 2
         if audio_data.dtype == np.float32:
@@ -213,3 +214,34 @@ class AudioProcessor:
             raise Exception(f"{upload_file.filename}音频文件保存或转换失败: {str(e)}")
         finally:
             await upload_file.close()  # 显式关闭上传文件
+
+    @staticmethod
+    def generate_add_silent(duration, audio_path):
+        """
+        将 音频文件延长，多余用静音填充
+        :param duration: float，延迟时间（单位：秒），默认为 0
+        :param audio_path: str，文件路径
+        :return: 文件路径，生成的 WAV 文件路径
+        """
+        logging.info(f"duration {duration} audio_path {audio_path}")
+        # 加载音频文件为 AudioSegment 对象（支持多种格式）
+        audio = AudioSegment.from_file(audio_path)
+        # 生成静音数据（如果有延迟需求）
+        if duration > 0:
+            logging.info(f"生成静音数据...")
+            # 将音频转换为 NumPy 数组格式
+            audio_np = AudioProcessor.audio_to_np_array(audio)
+            # 生成静音数据
+            num_silence_samples = int(duration * audio.frame_rate)
+            silence = np.zeros(num_silence_samples, dtype=audio_np.dtype)
+            # 静音数据拼接后面
+            audio_np = np.concatenate((audio_np, silence), axis=0)
+            # 将音频数据转换回 AudioSegment 对象
+            audio = AudioProcessor.np_array_to_audio(audio_np, audio)
+
+        # 将静音片段保存为临时文件
+        silent_file = add_suffix_to_filename(audio_path, "_silent")
+
+        audio.export(silent_file, format="wav")
+
+        return silent_file

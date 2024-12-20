@@ -1,16 +1,16 @@
 import argparse
 import uvicorn
 from pathlib import Path
-from fastapi import FastAPI, File, UploadFile, Form, Query, Request, status
+from fastapi import FastAPI, File, UploadFile, Form, Query
 from fastapi.responses import JSONResponse, PlainTextResponse, FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_swagger_ui_html
 from starlette.middleware.cors import CORSMiddleware  #引入 CORS中间件模块
-from contextlib import asynccontextmanager
-from custom.file_utils import logging
+from custom.file_utils import logging, delete_old_files_and_folders
 from custom.TextProcessor import TextProcessor
 from custom.AudioProcessor import AudioProcessor
 from custom.VideoProcessor import VideoProcessor
+from custom.MfaAlignProcessor import MfaAlignProcessor
 
 # 需要安装ImageMagick并在环境变量中配置IMAGEMAGICK_BINARY的路径，或者运行时动态指定
 # https://imagemagick.org/script/download.php
@@ -18,18 +18,12 @@ from custom.VideoProcessor import VideoProcessor
 # mfa model download dictionary mandarin_china_mfa
 # mfa model download acoustic mandarin_mfa
 
+result_dir='./results'
 
 #设置允许访问的域名
 origins = ["*"]  #"*"，即为所有。
 
-# 定义 FastAPI 应用
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # 在应用启动时加载模型
-    logging.info("Application loaded successfully!")
-    yield  # 这里是应用运行的时间段
-    logging.info("Application shutting down...")  # 在这里可以释放资源    
-app = FastAPI(docs_url=None, lifespan=lifespan)
+app = FastAPI(docs_url=None)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,  #设置允许的origins来源
@@ -47,18 +41,6 @@ async def custom_swagger_ui_html():
         title="Custom Swagger UI",
         swagger_js_url="/static/swagger-ui/5.9.0/swagger-ui-bundle.js",
         swagger_css_url="/static/swagger-ui/5.9.0/swagger-ui.css",
-    )
-
-# 自定义异常处理器
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    logging.info(f"Exception during request {request.url}: {exc}")
-    # 记录错误信息
-    TextProcessor.log_error(exc)
-
-    return JSONResponse(
-        {"errcode": 500, "errmsg": "Internal Server Error"},
-        status_code=500
     )
 
 @app.get("/", response_class=HTMLResponse)
@@ -103,12 +85,13 @@ async def process_video(
     返回：
         JSONResponse: 包含处理结果的 JSON 响应。
     """
-    # 初始化处理器
-    video_processor = VideoProcessor()
-    audio_processor = AudioProcessor()
-    subtitle_file = None
 
     try:
+        # 初始化处理器
+        video_processor = VideoProcessor()
+        audio_processor = AudioProcessor()
+        subtitle_file = None
+
         video_upload = await video_processor.save_upload_to_video(
                                 upload_file = video
                             )
@@ -125,26 +108,62 @@ async def process_video(
                                 nonsilent = False,
                                 reduce_noise_enabled = False
                             )
-    except Exception as e:
-        TextProcessor.log_error(e)
-        return JSONResponse({"errcode": -1, "errmsg": str(e)})
 
-    video_path, subtitle_path = video_processor.video_subtitle(
-        video_file = video_upload,
-        audio_file = audio_upload,
-        prompt_text = prompt_text,
-        add_audio = add_audio,
-        subtitle_file = subtitle_file,
-        font = font,
-        font_size = font_size,
-        font_color = font_color,
-        stroke_color = stroke_color,
-        stroke_width = stroke_width,
-        bottom = bottom, 
-        opacity = opacity
-    )
-    # 返回视频响应
-    return JSONResponse({"errcode": 0, "errmsg": "ok", "video_path": video_path, "subtitle_path": subtitle_path})
+        video_path, subtitle_path = video_processor.video_subtitle(
+            video_file = video_upload,
+            audio_file = audio_upload,
+            prompt_text = prompt_text,
+            add_audio = add_audio,
+            subtitle_file = subtitle_file,
+            font = font,
+            font_size = font_size,
+            font_color = font_color,
+            stroke_color = stroke_color,
+            stroke_width = stroke_width,
+            bottom = bottom,
+            opacity = opacity
+        )
+        # 删除过期文件
+        delete_old_files_and_folders(result_dir, 1)
+        # 返回视频响应
+        return JSONResponse({"errcode": 0, "errmsg": "ok", "video_path": video_path, "subtitle_path": subtitle_path})
+    except Exception as ex:
+        TextProcessor.log_error(ex)
+        return JSONResponse({"errcode": -1, "errmsg": str(ex)})
+
+@app.post("/process_audio/")
+async def process_audio(
+        audio: UploadFile = File(..., description="上传的音频文件"),
+        prompt_text: str = Form(..., description="提供的文本提示，必填")
+):
+    """
+    处理视频和音频，生成带有字幕的视频。
+    返回：
+        JSONResponse: 包含处理结果的 JSON 响应。
+    """
+    try:
+        # 初始化处理器
+        audio_processor = AudioProcessor()
+
+        audio_file = await audio_processor.save_upload_to_wav(
+            upload_file=audio,
+            prefix="",
+            volume_multiplier=1.0,
+            nonsilent=False,
+            reduce_noise_enabled=False
+        )
+        mfa_align_processor = MfaAlignProcessor()
+        subtitle_path = mfa_align_processor.align_audio_with_text(
+            audio_path=audio_file,
+            text=prompt_text
+        )
+        # 删除过期文件
+        delete_old_files_and_folders(result_dir, 1)
+        # 返回视频响应
+        return JSONResponse({"errcode": 0, "errmsg": "ok",  "subtitle_path": subtitle_path})
+    except Exception as ex:
+        TextProcessor.log_error(ex)
+        return JSONResponse({"errcode": -1, "errmsg": str(ex)})
 
 @app.get('/download')
 async def download(
@@ -156,7 +175,7 @@ async def download(
     file_name = Path(file_path).name
     return FileResponse(path=file_path, filename=file_name, media_type='application/octet-stream')
 
-if(__name__=='__main__'):
+if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--port',
                         type=int,

@@ -8,7 +8,7 @@ from custom.file_utils import logging, get_full_path
 from custom.TextProcessor import TextProcessor
 
 class MfaAlignProcessor:
-    def __init__(self, 
+    def __init__(self,
                  model_dir="MFA/pretrained_models"
         ):
         """
@@ -33,14 +33,14 @@ class MfaAlignProcessor:
             acoustic_name = 'english_mfa.zip'
         else:
             raise ValueError(f"Unsupported language: {language}")
-        
+
         model_dir = get_full_path(self.model_dir)
         dictionary_path = os.path.join(model_dir, 'dictionary', dictionary_name)
         model_path = os.path.join(model_dir, 'acoustic', acoustic_name)
         # 构建保存路径
         audio_path = get_full_path(audio_path)
         audio_dir = Path(audio_path).parent
-        audio_name = Path(audio_path).stem # 获取音频文件名（不带扩展名）
+        audio_name = Path(audio_path).stem  # 获取音频文件名（不带扩展名）
         # 将文本写入到输入子目录
         text_path = os.path.join(audio_dir, f"{audio_name}.txt")
         with open(text_path, 'w', encoding='utf-8') as text_file:
@@ -55,12 +55,12 @@ class MfaAlignProcessor:
             audio_dir,  # 音频文件目录
             dictionary_path,  # 字典文件路径
             model_path,  # 声学模型路径
-            audio_dir,   # 输出结果目录
-            f"--temporary_directory", audio_dir,  #临时目录
-            "--clean", # 清理运行前的旧文件
-            "--final_clean", # 清理运行后的临时文件
-            "--overwrite", # 覆盖旧输出
-            f"--num_jobs", str(num_jobs) # 使用 CPU 核心数
+            audio_dir,  # 输出结果目录
+            f"--temporary_directory", audio_dir,  # 临时目录
+            "--clean",  # 清理运行前的旧文件
+            "--final_clean",  # 清理运行后的临时文件
+            "--overwrite",  # 覆盖旧输出
+            f"--num_jobs", str(num_jobs)  # 使用 CPU 核心数
         ]
 
         try:
@@ -132,7 +132,7 @@ class MfaAlignProcessor:
             if start_time is None:
                 start_time = interval.minTime
             end_time = interval.maxTime
-            
+
             if word:
                 # 判断是中文还是英文并处理
                 if self.is_english(word) and current_length > 0:
@@ -141,7 +141,7 @@ class MfaAlignProcessor:
                 current_subtitle.append(word)
                 current_length += len(word)
             # 如果无文字或长度超出限制，则分行
-            if (not word and current_length >=min_line_length) or current_length >= max_line_length:
+            if (not word and current_length >= min_line_length) or current_length >= max_line_length:
                 if current_subtitle:  # 确保当前字幕行非空
                     subtitle_text = ''.join(current_subtitle)
                     subtitles.append((subtitle_id, start_time, end_time, subtitle_text))

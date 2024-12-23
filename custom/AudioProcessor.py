@@ -8,7 +8,7 @@ from fastapi import UploadFile
 from custom.file_utils import logging, add_suffix_to_filename
 
 class AudioProcessor:
-    def __init__(self, 
+    def __init__(self,
                  temp_dir="results/"):
         """
         初始化音频处理器，设置临时文件目录。
@@ -16,7 +16,7 @@ class AudioProcessor:
         """
         self.temp_dir = temp_dir
         os.makedirs(temp_dir, exist_ok=True)  # 创建临时目录（如果不存在）
-    
+
     @staticmethod
     def volume_safely(audio: AudioSegment, volume_multiplier: float = 1.0) -> AudioSegment:
         """
@@ -40,7 +40,7 @@ class AudioProcessor:
 
         return audio
 
-    def generate_wav(self, audio_name , audio_data, sample_rate, delay=0.0, volume_multiplier = 1.0):
+    def generate_wav(self, audio_name, audio_data, sample_rate, delay=0.0, volume_multiplier=1.0):
         """
         使用 pydub 将音频数据转换为 WAV 格式，并支持添加延迟。
         :param audio_data: numpy 数组，音频数据
@@ -98,13 +98,13 @@ class AudioProcessor:
         # 导出 WAV 文件
         audio_segment.export(wav_path, format="wav")
 
-        return wav_path        
-    
+        return wav_path
+
     @staticmethod
     def audio_to_np_array(audio: AudioSegment):
         """将 AudioSegment 转换为 NumPy 数组"""
         return np.array(audio.get_array_of_samples())
-    
+
     @staticmethod
     def np_array_to_audio(np_array, audio: AudioSegment):
         """将 NumPy 数组转换回 AudioSegment"""
@@ -114,13 +114,13 @@ class AudioProcessor:
             sample_width=audio.sample_width,
             channels=audio.channels
         )
-    
+
     async def save_upload_to_wav(
-            self, 
-            upload_file: UploadFile, 
-            prefix: str = "", 
-            volume_multiplier: float = 1.0, 
-            nonsilent: bool = False, 
+            self,
+            upload_file: UploadFile,
+            prefix: str = "",
+            volume_multiplier: float = 1.0,
+            nonsilent: bool = False,
             reduce_noise_enabled: bool = True
         ):
         """
@@ -158,7 +158,7 @@ class AudioProcessor:
         else:
             wav_path = str(upload_path)
         # 返回字符串路径
-        upload_path = str(upload_path)  
+        upload_path = str(upload_path)
 
         logging.info(f"接收上传{upload_file.filename}请求 {upload_path}")
 
@@ -166,9 +166,9 @@ class AudioProcessor:
             # 保存上传的原始音频文件
             with open(upload_path, "wb") as f:
                 f.write(await upload_file.read())
-            
+
             # 加载音频文件为 AudioSegment 对象（支持多种格式）
-            audio = AudioSegment.from_file(upload_path)        
+            audio = AudioSegment.from_file(upload_path)
 
             # 如果启用了降噪处理
             if reduce_noise_enabled:

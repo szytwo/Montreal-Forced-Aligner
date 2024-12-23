@@ -5,6 +5,7 @@ from fastapi import UploadFile
 from moviepy.editor import *
 from custom.file_utils import logging, get_full_path, add_suffix_to_filename
 from custom.MfaAlignProcessor import MfaAlignProcessor
+from custom.TextProcessor import TextProcessor
 
 class VideoProcessor:
     def __init__(self,
@@ -44,7 +45,7 @@ class VideoProcessor:
             raise Exception(f"{upload_file.filename} 视频文件保存失败: {str(e)}")
         finally:
             await upload_file.close()  # 显式关闭上传文件
-        
+
     async def save_upload_to_srt(self, upload_file: UploadFile):
         """
         保存上传的文件到本地并返回路径。
@@ -120,7 +121,7 @@ class VideoProcessor:
         font_color: str = "yellow",
         stroke_color: str = "yellow",
         stroke_width: int = 0,
-        bottom: int = 10, 
+        bottom: int = 10,
         opacity: int = 0
     ) -> list:
         """
@@ -138,7 +139,7 @@ class VideoProcessor:
         """
         if not os.path.exists(subtitle_file):
             raise FileNotFoundError(f"字幕文件不存在: {subtitle_file}")
-        
+
         # 以 1280px 宽度的视频为参照，自动适配字体大小
         reference_width = 1280
         font_size = int(font_size * (video_width / reference_width))
@@ -198,7 +199,7 @@ class VideoProcessor:
                 raise RuntimeError(f"创建字幕失败: {text} ({start} - {end})") from e
 
         return subtitle_clips
-        
+
     def video_subtitle(
         self,
         video_file: str,
@@ -211,7 +212,7 @@ class VideoProcessor:
         font_color: str = "yellow",
         stroke_color: str = "yellow",
         stroke_width: int = 0,
-        bottom: int = 10, 
+        bottom: int = 10,
         opacity: int = 0
     ) -> str:
         """
@@ -235,10 +236,11 @@ class VideoProcessor:
             raise FileNotFoundError(f"视频文件不存在: {video_file}")
         if audio_file and not os.path.exists(audio_file):
             raise FileNotFoundError(f"音频文件不存在: {audio_file}")
-        
+
         video_clip = None
         audio_clip = None
         final_clip = None
+        output_video = video_file
 
         try:
             # 加载视频文件
@@ -264,8 +266,8 @@ class VideoProcessor:
                 font_color=font_color,
                 stroke_color=stroke_color,
                 stroke_width=stroke_width,
-                bottom = bottom, 
-                opacity = opacity
+                bottom=bottom,
+                opacity=opacity
             )
             # 合成视频
             final_clip = CompositeVideoClip([video_clip] + subtitle_clips)
@@ -294,13 +296,8 @@ class VideoProcessor:
             # 保存视频
             # # NVIDIA 编码器 codec="h264_nvenc"    CPU编码 codec="libx264"
             final_clip.write_videofile(output_video, codec="h264_nvenc", audio_codec="aac", fps=final_clip.fps)
-
-            return output_video, subtitle_file
         except Exception as e:
-            # 捕获异常并记录
-            logging.error(f"处理视频时发生错误: {str(e)}")
-            # 如果需要重新抛出以让外部感知异常
-            raise e
+            TextProcessor.log_error(e)
         finally:
             # 确保资源被释放
             if final_clip:
@@ -309,3 +306,5 @@ class VideoProcessor:
                 video_clip.close()
             if audio_clip:
                 audio_clip.close()
+
+        return output_video, subtitle_file

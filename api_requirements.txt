@@ -8,3 +8,4 @@ torchaudio
 pydub
 noisereduce
 uvicorn
+textgrid

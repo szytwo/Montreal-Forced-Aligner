@@ -2,8 +2,8 @@ import os
 from tqdm import tqdm
 from pathlib import Path
 from fastapi import UploadFile
-from moviepy.editor import *
-from custom.file_utils import logging, get_full_path, add_suffix_to_filename
+from moviepy import *
+from custom.file_utils import logging, add_suffix_to_filename
 from custom.MfaAlignProcessor import MfaAlignProcessor
 from custom.TextProcessor import TextProcessor
 
@@ -75,7 +75,8 @@ class VideoProcessor:
         finally:
             await upload_file.close()  # 显式关闭上传文件
 
-    def convert_video_to_25fps(self, video_path):
+    @staticmethod
+    def convert_video_to_25fps(video_path):
         """ 使用 MoviePy 将视频转换为 25 FPS """
         # 检查视频帧率
         clip = VideoFileClip(video_path)
@@ -244,7 +245,7 @@ class VideoProcessor:
 
         try:
             # 加载视频文件
-            video_file, fps = self.convert_video_to_25fps(video_file)
+            video_file, fps = VideoProcessor.convert_video_to_25fps(video_file)
             video_clip = VideoFileClip(video_file)
             video_width = video_clip.w  # 获取视频宽度
             # 如果没有提供字幕文件，使用 MFA 对齐生成

@@ -2,7 +2,7 @@ import os
 from tqdm import tqdm
 from pathlib import Path
 from fastapi import UploadFile
-from moviepy import *
+from moviepy.editor import *
 from custom.file_utils import logging, add_suffix_to_filename
 from custom.MfaAlignProcessor import MfaAlignProcessor
 from custom.TextProcessor import TextProcessor

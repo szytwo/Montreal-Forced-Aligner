@@ -98,7 +98,8 @@ MFA/
 error/
 venv/
 example/
-
 *.whl
 
 .github/
+
+go-api-conda.bat

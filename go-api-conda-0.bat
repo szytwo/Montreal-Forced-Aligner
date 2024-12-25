@@ -1,4 +1,6 @@
 @echo off
+chcp 65001 >nul
+echo  启动中，请耐心等待
 REM 定义 Anaconda 路径
 set CONDA_PATH=D:\ProgramData\anaconda3
 

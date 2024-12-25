@@ -89,7 +89,7 @@ class VideoProcessor:
             converted_video_path = add_suffix_to_filename(video_path, f"_{fps}")
             # NVIDIA 编码器 codec="h264_nvenc"    CPU编码 codec="libx264"
             clip.set_fps(fps).write_videofile(
-                converted_video_path, codec="h264_nvenc", audio_codec="aac", preset="fast"
+                converted_video_path, codec="libx264", audio_codec="aac", preset="fast"
             )
             video_path = converted_video_path
 
@@ -296,7 +296,7 @@ class VideoProcessor:
             output_video = os.path.join(video_dir, f"{Path(video_file).stem}_output{Path(video_file).suffix}")
             # 保存视频
             # # NVIDIA 编码器 codec="h264_nvenc"    CPU编码 codec="libx264"
-            final_clip.write_videofile(output_video, codec="h264_nvenc", audio_codec="aac", fps=final_clip.fps)
+            final_clip.write_videofile(output_video, codec="libx264", audio_codec="aac", fps=final_clip.fps)
         except Exception as e:
             TextProcessor.log_error(e)
         finally:

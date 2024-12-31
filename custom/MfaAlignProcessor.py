@@ -22,6 +22,8 @@ class MfaAlignProcessor:
         使用 MFA 进行音频与文本对齐
         :param audio_path: 包含音频文件的路径
         :param text: 文本
+        :param min_line_length: 行最小长度
+        :param max_line_length: 行最大长度
         """
         language = TextProcessor.detect_language(text)
         # 根据语言选择模型和字典路径
@@ -83,7 +85,8 @@ class MfaAlignProcessor:
             raise Exception(f"Error during alignment: {e.stderr}")
 
     # 格式化时间为 hh:mm:ss,SSS
-    def format_time(self, seconds):
+    @staticmethod
+    def format_time(seconds):
         td = timedelta(seconds=seconds)
         total_seconds = int(td.total_seconds())
         milliseconds = int((td.total_seconds() - total_seconds) * 1000)
@@ -92,7 +95,8 @@ class MfaAlignProcessor:
         seconds = total_seconds % 60
         return f"{hours:02}:{minutes:02}:{seconds:02},{milliseconds:03}"
 
-    def is_english(self, word):
+    @staticmethod
+    def is_english(word):
         """
         判断给定的单词是否为英文单词
         :param word: 输入的单词
@@ -101,7 +105,8 @@ class MfaAlignProcessor:
         # 判断是否包含英文字符 (使用正则表达式检查是否有英文字符)
         return bool(re.match(r'[A-Za-z0-9]+$', word))
 
-    def remove_punctuation(self, text):
+    @staticmethod
+    def remove_punctuation(text):
         """
         移除常用的中英文标点符号
         """
@@ -114,7 +119,8 @@ class MfaAlignProcessor:
 
         :param textgrid_path: 输入的 TextGrid 文件路径
         :param output_srt_path: 输出的 SRT 文件路径
-        :param min_gap: 如果两个标注的时间间隔大于这个值，则开始新的字幕条目
+        :param min_line_length: 行最小长度
+        :param max_line_length: 行最大长度
         """
         tg = TextGrid.fromFile(textgrid_path)
         tier = tg[0]  # 假设对齐文本在第一个层级

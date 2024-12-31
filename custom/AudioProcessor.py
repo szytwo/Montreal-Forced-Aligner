@@ -28,13 +28,10 @@ class AudioProcessor:
         logging.info(f"volume_multiplier: {volume_multiplier}")
         if volume_multiplier <= 0:
             raise ValueError("volume_multiplier 必须大于 0")
-
         # 计算增益（分贝），根据倍数调整
         gain_in_db = 20 * np.log10(volume_multiplier)
-
         # 应用增益调整音量
         audio = audio.apply_gain(gain_in_db)
-
         # 确保音频不削波（归一化到峰值 -0.1 dB 以下）
         audio = audio.normalize(headroom=0.1)
 
@@ -43,6 +40,7 @@ class AudioProcessor:
     def generate_wav(self, audio_name, audio_data, sample_rate, delay=0.0, volume_multiplier=1.0):
         """
         使用 pydub 将音频数据转换为 WAV 格式，并支持添加延迟。
+        :param audio_name: str 音频名称
         :param audio_data: numpy 数组，音频数据
         :param sample_rate: int，采样率
         :param delay: float，延迟时间（单位：秒），默认为 0
@@ -57,9 +55,7 @@ class AudioProcessor:
             num_silence_samples = int(delay * sample_rate)
             silence = np.zeros(num_silence_samples, dtype=audio_data.dtype)
             audio_data = np.concatenate((silence, audio_data), axis=0)
-
         # 检测音频数据类型并转换
-        sample_width = 2
         if audio_data.dtype == np.float32:
             # 如果是 float32 数据，量化到 int16
             audio_data = (audio_data * 32767).astype(np.int16)
@@ -166,10 +162,8 @@ class AudioProcessor:
             # 保存上传的原始音频文件
             with open(upload_path, "wb") as f:
                 f.write(await upload_file.read())
-
             # 加载音频文件为 AudioSegment 对象（支持多种格式）
             audio = AudioSegment.from_file(upload_path)
-
             # 如果启用了降噪处理
             if reduce_noise_enabled:
                 logging.info("reduce noise start")
@@ -188,7 +182,6 @@ class AudioProcessor:
                 )
                 # 将降噪后的音频数据转换回 AudioSegment 对象
                 audio = self.np_array_to_audio(reduced_audio_np, audio)
-
             # 如果需要去除前后的静音部分
             if nonsilent:
                 logging.info("nonsilent start")
@@ -200,11 +193,9 @@ class AudioProcessor:
                     end_trim = nonsilent_ranges[-1][1]
                     # 截取非静音部分的音频
                     audio = audio[start_trim:end_trim]
-
             # 如果音量调整倍数不是 1.0，进行音量调整
             if volume_multiplier != 1.0:
                 audio = self.volume_safely(audio, volume_multiplier=volume_multiplier)
-
             # 导出处理后的音频文件为 WAV 格式
             audio.export(wav_path, format="wav")
 
@@ -238,7 +229,6 @@ class AudioProcessor:
             audio_np = np.concatenate((audio_np, silence), axis=0)
             # 将音频数据转换回 AudioSegment 对象
             audio = AudioProcessor.np_array_to_audio(audio_np, audio)
-
         # 将静音片段保存为临时文件
         silent_file = add_suffix_to_filename(audio_path, "_silent")
 

@@ -156,7 +156,7 @@ class AudioProcessor:
         # 返回字符串路径
         upload_path = str(upload_path)
 
-        logging.info(f"接收上传{upload_file.filename}请求 {upload_path}")
+        logging.info(f"接收上传 {upload_file.filename} 请求 {upload_path}")
 
         try:
             # 保存上传的原始音频文件

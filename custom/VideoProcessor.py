@@ -5,6 +5,7 @@ from fastapi import UploadFile
 from moviepy.editor import *
 from custom.file_utils import logging, add_suffix_to_filename
 from custom.MfaAlignProcessor import MfaAlignProcessor
+from custom.AsrProcessor import AsrProcessor
 from custom.TextProcessor import TextProcessor
 
 class VideoProcessor:
@@ -250,14 +251,24 @@ class VideoProcessor:
             video_width = video_clip.w  # 获取视频宽度
             # 如果没有提供字幕文件，使用 MFA 对齐生成
             if not subtitle_file and prompt_text:
-                mfa_align_processor = MfaAlignProcessor()
                 maxsize = video_width / font_size - 2  # 每行最大字符数
+
+                mfa_align_processor = MfaAlignProcessor()
                 subtitle_file = mfa_align_processor.align_audio_with_text(
                     audio_path=audio_file,
                     text=prompt_text,
                     min_line_length=0,
                     max_line_length=maxsize,
                 )
+                # MFA失败，则使用ASR
+                if not subtitle_file:
+                    asr_processor = AsrProcessor()
+                    subtitle_file = asr_processor.asr_to_srt(
+                        audio_path=audio_file,
+                        min_line_length=0,
+                        max_line_length=maxsize,
+                    )
+
             # 创建字幕片段
             subtitle_clips = self.create_subtitle_clip(
                 subtitle_file=subtitle_file,

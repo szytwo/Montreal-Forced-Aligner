@@ -6,13 +6,11 @@ from custom.SrtProcessor import SrtProcessor
 from custom.TextProcessor import TextProcessor
 
 class AsrProcessor:
-    def __init__(self,
-                 asr_url='http://127.0.0.1:7850/api/v1/asr'
-        ):
+    def __init__(self):
         """
         初始化ASR音频与文本对齐处理器。
-        :param asr_url: asr接口
         """
+        asr_url = os.getenv("ASR_URL", "") #asr接口
         self.asr_url = asr_url
 
     def send_asr_request(self, audio_path, lang='auto'):

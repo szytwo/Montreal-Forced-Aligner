@@ -11,6 +11,7 @@ from custom.TextProcessor import TextProcessor
 from custom.AudioProcessor import AudioProcessor
 from custom.VideoProcessor import VideoProcessor
 from custom.MfaAlignProcessor import MfaAlignProcessor
+from custom.AsrProcessor import AsrProcessor
 
 # 需要安装ImageMagick并在环境变量中配置IMAGEMAGICK_BINARY的路径，或者运行时动态指定
 # https://imagemagick.org/script/download.php
@@ -123,13 +124,14 @@ async def process_video(
             bottom = bottom,
             opacity = opacity
         )
-        # 删除过期文件
-        delete_old_files_and_folders(result_dir, 1)
         # 返回视频响应
         return JSONResponse({"errcode": 0, "errmsg": "ok", "video_path": video_path, "subtitle_path": subtitle_path})
     except Exception as ex:
         TextProcessor.log_error(ex)
         return JSONResponse({"errcode": -1, "errmsg": str(ex)})
+    finally:
+        # 删除过期文件
+        delete_old_files_and_folders(result_dir, 1)
 
 @app.post("/process_audio/")
 async def process_audio(
@@ -157,13 +159,20 @@ async def process_audio(
             audio_path=audio_file,
             text=prompt_text
         )
-        # 删除过期文件
-        delete_old_files_and_folders(result_dir, 1)
+        # MFA失败，则使用ASR
+        if not subtitle_path:
+            asr_processor = AsrProcessor()
+            subtitle_path = asr_processor.asr_to_srt(
+                audio_path=audio_file
+            )
         # 返回视频响应
         return JSONResponse({"errcode": 0, "errmsg": "ok",  "subtitle_path": subtitle_path})
     except Exception as ex:
         TextProcessor.log_error(ex)
         return JSONResponse({"errcode": -1, "errmsg": str(ex)})
+    finally:
+        # 删除过期文件
+        delete_old_files_and_folders(result_dir, 1)
 
 @app.get('/download')
 async def download(

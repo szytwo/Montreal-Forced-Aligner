@@ -66,14 +66,14 @@ class AsrProcessor:
     def asr_to_srt(self, audio_path, min_line_length=0, max_line_length=40):
         try:
             logging.info(f"正在使用 ASR 进行音频与文本对齐...")
+            # 构建保存路径
+            audio_path = get_full_path(audio_path)
+            audio_dir = Path(audio_path).parent
+            audio_name = Path(audio_path).stem  # 获取音频文件名（不带扩展名）
             # 发送 ASR 请求并获取识别结果
             result = self.send_asr_request(audio_path)
 
             if result:
-                # 构建保存路径
-                audio_path = get_full_path(audio_path)
-                audio_dir = Path(audio_path).parent
-                audio_name = Path(audio_path).stem  # 获取音频文件名（不带扩展名）
                 # 提取文本和时间戳数据
                 timestamp_data = result['result'][0]['timestamp']
                 # 生成 TextGrid 文件

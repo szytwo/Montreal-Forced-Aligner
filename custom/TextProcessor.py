@@ -17,7 +17,7 @@ class TextProcessor:
         """
         try:
             lang = None
-            if not text:
+            if text:
                 lang = detect(text)
             logging.info(f'Detected language: {lang}')
             return lang

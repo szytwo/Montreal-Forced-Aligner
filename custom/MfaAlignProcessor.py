@@ -25,14 +25,12 @@ class MfaAlignProcessor:
         """
         language = TextProcessor.detect_language(text)
         # 根据语言选择模型和字典路径
-        if language == 'zh-cn':
-            dictionary_name = 'mandarin_china_mfa.dict'
-            acoustic_name = 'mandarin_mfa.zip'
-        elif language == 'en':
+        dictionary_name = 'mandarin_china_mfa.dict'
+        acoustic_name = 'mandarin_mfa.zip'
+
+        if language == 'en':
             dictionary_name = 'english_uk_mfa.dict'
             acoustic_name = 'english_mfa.zip'
-        else:
-            raise ValueError(f"Unsupported language: {language}")
 
         model_dir = get_full_path(self.model_dir)
         dictionary_path = os.path.join(model_dir, 'dictionary', dictionary_name)

@@ -15,7 +15,7 @@ class AsrProcessor:
 
     def send_asr_request(self, audio_path, lang='auto'):
         # 发送 GET 请求
-        params = {'audio_path': audio_path, 'lang': lang}
+        params = {'audio_path': audio_path, 'lang': lang, 'output_timestamp': True}
         headers = {'accept': 'application/json'}
 
         response = requests.get(self.asr_url, params=params, headers=headers)

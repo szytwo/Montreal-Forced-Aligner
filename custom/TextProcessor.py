@@ -16,7 +16,9 @@ class TextProcessor:
         :return: 返回检测到的语言代码（如 'en', 'zh-cn'）
         """
         try:
-            lang = detect(text)
+            lang = None
+            if not text:
+                lang = detect(text)
             logging.info(f'Detected language: {lang}')
             return lang
         except Exception as e:
@@ -67,4 +69,4 @@ class TextProcessor:
             log_file.write("堆栈信息:\n")
             log_file.write(error_traceback + '\n')
         
-        logging.info(f"错误信息已保存至: {log_file_path}")
+        logging.error(f"发生错误，信息已保存至: {log_file_path}")

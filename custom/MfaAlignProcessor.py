@@ -81,4 +81,5 @@ class MfaAlignProcessor:
             ex = Exception(f"Error during alignment: {e.stderr}")
             TextProcessor.log_error(ex)
 
-            return None
+        logging.error("MFA 音频与文本对齐失败!")
+        return None

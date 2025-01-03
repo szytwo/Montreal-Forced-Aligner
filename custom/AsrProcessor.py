@@ -84,9 +84,8 @@ class AsrProcessor:
                 logging.info("ASR 音频与文本对齐完成!")
 
                 return srt_file
-            else:
-                logging.error("ASR 音频与文本对齐失败!")
-                return None
         except Exception as e:
             TextProcessor.log_error(e)
-            return None
+
+        logging.error("ASR 音频与文本对齐失败!")
+        return None

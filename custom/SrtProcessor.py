@@ -30,7 +30,7 @@ class SrtProcessor:
         """
         移除常用的中英文标点符号
         """
-        punctuation_pattern = r'[，。！？；：、“”‘’（）《》【】,.!?;:"\'()<>[\]{}]'
+        punctuation_pattern = r'[，。！？；：、“”‘’（）《》【】,.!?;:"\'()<>[\]{}▁]'
         return re.sub(punctuation_pattern, '', text)
 
     @staticmethod

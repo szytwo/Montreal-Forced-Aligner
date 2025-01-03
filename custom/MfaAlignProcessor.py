@@ -77,5 +77,8 @@ class MfaAlignProcessor:
 
             return srt_file
         except subprocess.CalledProcessError as e:
-            TextProcessor.log_error(e)
+            # 捕获并抛出任何在处理过程中发生的异常
+            ex = Exception(f"Error during alignment: {e.stderr}")
+            TextProcessor.log_error(ex)
+
             return None

@@ -93,8 +93,8 @@ class VideoProcessor:
                 converted_video_path,
                 codec="libx264",
                 audio_codec="aac",
-                audio_bitrate='192k',
-                preset="fast"
+                audio_bitrate="192k",
+                preset="slow"
             )
             video_path = converted_video_path
 
@@ -314,9 +314,10 @@ class VideoProcessor:
             final_clip.write_videofile(
                 output_video,
                 codec="libx264",
+                fps=final_clip.fps,
                 audio_codec="aac",
-                audio_bitrate='192k',
-                fps=final_clip.fps
+                audio_bitrate="192k",
+                preset="slow"
             )
         except Exception as e:
             TextProcessor.log_error(e)

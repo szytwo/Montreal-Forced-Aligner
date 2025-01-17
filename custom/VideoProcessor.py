@@ -1,12 +1,16 @@
 import os
-from tqdm import tqdm
+import subprocess
 from pathlib import Path
+
 from fastapi import UploadFile
 from moviepy.editor import *
-from custom.file_utils import logging, add_suffix_to_filename
-from custom.MfaAlignProcessor import MfaAlignProcessor
+from tqdm import tqdm
+
 from custom.AsrProcessor import AsrProcessor
+from custom.MfaAlignProcessor import MfaAlignProcessor
 from custom.TextProcessor import TextProcessor
+from custom.file_utils import logging, add_suffix_to_filename
+
 
 class VideoProcessor:
     def __init__(self,
@@ -77,7 +81,7 @@ class VideoProcessor:
             await upload_file.close()  # 显式关闭上传文件
 
     @staticmethod
-    def convert_video_to_25fps(video_path):
+    def convert_video_to_25fps(video_path, video_metadata):
         """ 使用 MoviePy 将视频转换为 25 FPS """
         # 检查视频帧率
         clip = VideoFileClip(video_path)
@@ -85,6 +89,12 @@ class VideoProcessor:
 
         if fps != 25:
             logging.info(f"视频帧率为 {fps}，转换为 25 FPS")
+            # 提取关键颜色信息
+            pix_fmt = video_metadata.get("pix_fmt", "yuv420p")
+            color_range = video_metadata.get("color_range", "tv")
+            color_space = video_metadata.get("color_space", "bt470bg")
+            color_transfer = video_metadata.get("color_transfer", "smpte170m")
+            color_primaries = video_metadata.get("color_primaries", "bt470bg")
 
             fps = 25
             converted_video_path = add_suffix_to_filename(video_path, f"_{fps}")
@@ -94,7 +104,15 @@ class VideoProcessor:
                 codec="libx264",
                 audio_codec="aac",
                 audio_bitrate="192k",
-                preset="slow"
+                preset="slow",
+                ffmpeg_params=[
+                    "-crf", "18",
+                    "-pix_fmt", pix_fmt,
+                    "-color_range", color_range,
+                    "-colorspace", color_space,
+                    "-color_trc", color_transfer,
+                    "-color_primaries", color_primaries
+                ]
             )
             video_path = converted_video_path
 
@@ -119,16 +137,16 @@ class VideoProcessor:
             raise ValueError(f"时间戳格式错误: {timestamp}") from e
 
     def create_subtitle_clip(
-        self,
-        subtitle_file: str,
-        video_width: int,
-        font: str = "fonts/yahei.ttf",
-        font_size: int = 70,
-        font_color: str = "yellow",
-        stroke_color: str = "yellow",
-        stroke_width: int = 0,
-        bottom: int = 10,
-        opacity: int = 0
+            self,
+            subtitle_file: str,
+            video_width: int,
+            font: str = "fonts/yahei.ttf",
+            font_size: int = 70,
+            font_color: str = "yellow",
+            stroke_color: str = "yellow",
+            stroke_width: int = 0,
+            bottom: int = 10,
+            opacity: int = 0
     ) -> list:
         """
         从 SRT 字幕文件创建字幕片段列表。
@@ -207,19 +225,19 @@ class VideoProcessor:
         return subtitle_clips
 
     def video_subtitle(
-        self,
-        video_file: str,
-        audio_file: str = None,
-        prompt_text: str = None,
-        add_audio: bool = False,
-        subtitle_file: str = None,
-        font: str = "fonts/yahei.ttf",
-        font_size: int = 70,
-        font_color: str = "yellow",
-        stroke_color: str = "yellow",
-        stroke_width: int = 0,
-        bottom: int = 10,
-        opacity: int = 0
+            self,
+            video_file: str,
+            audio_file: str = None,
+            prompt_text: str = None,
+            add_audio: bool = False,
+            subtitle_file: str = None,
+            font: str = "fonts/yahei.ttf",
+            font_size: int = 70,
+            font_color: str = "yellow",
+            stroke_color: str = "yellow",
+            stroke_width: int = 0,
+            bottom: int = 10,
+            opacity: int = 0
     ) -> str:
         """
         给视频添加字幕（以及可选的音频）并输出。
@@ -250,7 +268,15 @@ class VideoProcessor:
 
         try:
             # 加载视频文件
-            video_file, fps = VideoProcessor.convert_video_to_25fps(video_file)
+            video_metadata = VideoProcessor.get_video_metadata(video_file)
+            # 提取关键颜色信息
+            pix_fmt = video_metadata.get("pix_fmt", "yuv420p")
+            color_range = video_metadata.get("color_range", "tv")
+            color_space = video_metadata.get("color_space", "bt470bg")
+            color_transfer = video_metadata.get("color_transfer", "smpte170m")
+            color_primaries = video_metadata.get("color_primaries", "bt470bg")
+
+            video_file, fps = VideoProcessor.convert_video_to_25fps(video_file, video_metadata)
             video_clip = VideoFileClip(video_file)
             video_width = video_clip.w  # 获取视频宽度
             # 如果没有提供字幕文件，使用 MFA 对齐生成
@@ -317,7 +343,15 @@ class VideoProcessor:
                 fps=final_clip.fps,
                 audio_codec="aac",
                 audio_bitrate="192k",
-                preset="slow"
+                preset="slow",
+                ffmpeg_params=[
+                    "-crf", "18",
+                    "-pix_fmt", pix_fmt,
+                    "-color_range", color_range,
+                    "-colorspace", color_space,
+                    "-color_trc", color_transfer,
+                    "-color_primaries", color_primaries
+                ]
             )
         except Exception as e:
             TextProcessor.log_error(e)
@@ -331,3 +365,17 @@ class VideoProcessor:
                 audio_clip.close()
 
         return output_video, subtitle_file
+
+    @staticmethod
+    def get_video_metadata(video_path):
+        cmd = [
+            "ffprobe", "-i", video_path, "-show_streams", "-select_streams", "v", "-hide_banner", "-loglevel", "error"
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        metadata = {}
+        for line in result.stdout.splitlines():
+            if "=" in line:
+                key, value = line.split("=", 1)
+                metadata[key.strip()] = value.strip()
+        logging.info(metadata)
+        return metadata

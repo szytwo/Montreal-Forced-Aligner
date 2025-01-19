@@ -1,13 +1,17 @@
-import os
 import datetime
+import os
 import traceback
+
 from langdetect import detect
+
 from custom.file_utils import logging
+
 
 class TextProcessor:
     """
     文本处理工具类，提供多种文本相关功能。
     """
+
     @staticmethod
     def detect_language(text):
         """
@@ -24,7 +28,7 @@ class TextProcessor:
         except Exception as e:
             logging.error(f"Language detection failed: {e}")
             return None
-    
+
     @staticmethod
     def ensure_sentence_ends_with_period(text):
         """
@@ -39,7 +43,7 @@ class TextProcessor:
             return text
         # 根据文本内容添加适当的句号
         lang = TextProcessor.detect_language(text)
-        if lang == 'zh-cn': # 中文文本
+        if lang == 'zh-cn':  # 中文文本
             return text + '。'
         else:  # 英文或其他
             return text + '.'
@@ -68,6 +72,5 @@ class TextProcessor:
             log_file.write(f"错误信息: {str(exception)}\n")
             log_file.write("堆栈信息:\n")
             log_file.write(error_traceback + '\n')
-        
-        logging.error(f"错误信息: {str(exception)}\n"
-                      f"详细信息已保存至: {log_file_path}")
+
+        logging.info(f"发生错误: {str(exception)}\n错误信息已保存至: {log_file_path}")

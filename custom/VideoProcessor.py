@@ -84,43 +84,42 @@ class VideoProcessor:
     def convert_video_to_25fps(video_path, video_metadata):
         """ 使用 MoviePy 将视频转换为 25 FPS """
         # 检查视频帧率
-        clip = VideoFileClip(video_path)
-        fps = clip.fps
+        r_frame_rate = video_metadata.get("r_frame_rate", "25/1")
+        original_fps = eval(r_frame_rate.strip())  # 将字符串帧率转换为浮点数
+        target_fps = 25
 
-        if fps != 25:
-            logging.info(f"视频帧率为 {fps}，转换为 25 FPS")
-            # 提取关键颜色信息
-            pix_fmt = video_metadata.get("pix_fmt", "yuv420p")
-            color_range = video_metadata.get("color_range", "tv")
-            color_space = video_metadata.get("color_space", "bt470bg")
-            color_transfer = video_metadata.get("color_transfer", "smpte170m")
-            color_primaries = video_metadata.get("color_primaries", "bt470bg")
+        if original_fps != target_fps:
+            logging.info(f"视频帧率为 {original_fps}，转换为 25 FPS")
+            converted_video_path = add_suffix_to_filename(video_path, f"_{target_fps}")
 
-            fps = 25
-            converted_video_path = add_suffix_to_filename(video_path, f"_{fps}")
-            # NVIDIA 编码器 codec="h264_nvenc"    CPU编码 codec="libx264"
-            clip.set_fps(fps).write_videofile(
-                converted_video_path,
-                codec="libx264",
-                audio_codec="aac",
-                audio_bitrate="192k",
-                preset="slow",
-                ffmpeg_params=[
-                    "-crf", "18",
-                    "-pix_fmt", pix_fmt,
-                    "-color_range", color_range,
-                    "-colorspace", color_space,
-                    "-color_trc", color_transfer,
-                    "-color_primaries", color_primaries
+            # 使用 FFmpeg 转换帧率
+            try:
+                # NVIDIA 编码器 codec="h264_nvenc"    CPU编码 codec="libx264"
+                # 创建 FFmpeg 命令来合成视频
+                cmd = [
+                    "ffmpeg",
+                    "-i", video_path,
+                    "-r", f"{target_fps}",  # 设置输出帧率
+                    "-c:v", "libx264",  # 使用 libx264 编码器
+                    "-crf", "18",  # 设置压缩质量
+                    "-preset", "slow",  # 设置编码速度/质量平衡
+                    "-c:a", "aac",  # 设置音频编码器
+                    "-b:a", "192k",  # 设置音频比特率
+                    converted_video_path
                 ]
-            )
-            video_path = converted_video_path
+                # 执行 FFmpeg 命令
+                subprocess.run(cmd, capture_output=True, text=True, check=True)
 
-            logging.info(f"视频转换完成: {video_path}")
-
-        clip.close()
-
-        return video_path, fps
+                logging.info(f"视频转换完成: {converted_video_path}")
+                return converted_video_path, target_fps
+            except subprocess.CalledProcessError as e:
+                # 捕获任何在处理过程中发生的异常
+                ex = Exception(f"Error ffmpeg: {e.stderr}")
+                TextProcessor.log_error(ex)
+                return None, None
+        else:
+            logging.info("视频帧率已经是 25 FPS，无需转换")
+            return video_path, original_fps
 
     @staticmethod
     def parse_srt_timestamp(timestamp: str) -> float:
@@ -269,13 +268,6 @@ class VideoProcessor:
         try:
             # 加载视频文件
             video_metadata = VideoProcessor.get_video_metadata(video_file)
-            # 提取关键颜色信息
-            pix_fmt = video_metadata.get("pix_fmt", "yuv420p")
-            color_range = video_metadata.get("color_range", "tv")
-            color_space = video_metadata.get("color_space", "bt470bg")
-            color_transfer = video_metadata.get("color_transfer", "smpte170m")
-            color_primaries = video_metadata.get("color_primaries", "bt470bg")
-
             video_file, fps = VideoProcessor.convert_video_to_25fps(video_file, video_metadata)
             video_clip = VideoFileClip(video_file)
             video_width = video_clip.w  # 获取视频宽度
@@ -346,11 +338,6 @@ class VideoProcessor:
                 preset="slow",
                 ffmpeg_params=[
                     "-crf", "18",
-                    "-pix_fmt", pix_fmt,
-                    "-color_range", color_range,
-                    "-colorspace", color_space,
-                    "-color_trc", color_transfer,
-                    "-color_primaries", color_primaries
                 ]
             )
         except Exception as e:

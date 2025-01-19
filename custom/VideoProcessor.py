@@ -268,6 +268,12 @@ class VideoProcessor:
         try:
             # 加载视频文件
             video_metadata = VideoProcessor.get_video_metadata(video_file)
+            # 提取关键颜色信息
+            pix_fmt = video_metadata.get("pix_fmt", "yuv420p")
+            color_range = video_metadata.get("color_range", "1")
+            color_space = video_metadata.get("color_space", "1")
+            color_transfer = video_metadata.get("color_transfer", "1")
+            color_primaries = video_metadata.get("color_primaries", "1")
             video_file, fps = VideoProcessor.convert_video_to_25fps(video_file, video_metadata)
             video_clip = VideoFileClip(video_file)
             video_width = video_clip.w  # 获取视频宽度
@@ -338,6 +344,11 @@ class VideoProcessor:
                 preset="slow",
                 ffmpeg_params=[
                     "-crf", "18",
+                    "-pix_fmt", pix_fmt,  # 设置像素格式
+                    "-color_range", color_range,  # 设置色彩范围
+                    "-colorspace", color_space,  # 设置色彩空间
+                    "-color_trc", color_transfer,  # 设置色彩传递特性
+                    "-color_primaries", color_primaries,  # 设置色彩基准
                 ]
             )
         except Exception as e:

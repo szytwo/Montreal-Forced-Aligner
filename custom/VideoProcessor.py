@@ -105,6 +105,9 @@ class VideoProcessor:
                     "-preset", "slow",  # 设置编码速度/质量平衡
                     "-c:a", "aac",  # 设置音频编码器
                     "-b:a", "192k",  # 设置音频比特率
+                    "-ar", "44100",
+                    "-ac", "2",
+                    "-y",
                     converted_video_path
                 ]
                 # 执行 FFmpeg 命令

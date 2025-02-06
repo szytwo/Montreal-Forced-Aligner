@@ -262,7 +262,8 @@ class VideoProcessor:
             raise FileNotFoundError(f"视频文件不存在: {video_file}")
         if audio_file and not os.path.exists(audio_file):
             raise FileNotFoundError(f"音频文件不存在: {audio_file}")
-
+        
+        audio_file = VideoProcessor.extract_audio(video_file)
         video_clip = None
         audio_clip = None
         final_clip = None
@@ -380,3 +381,43 @@ class VideoProcessor:
                 metadata[key.strip()] = value.strip()
         logging.info(metadata)
         return metadata
+
+    @staticmethod
+    def extract_audio(video_path, audio_format="wav"):
+        """
+        从视频文件中提取音频，并保存为指定格式的音频文件。
+
+        :param video_path: 输入视频文件路径
+        :param audio_format: 输出音频格式（支持 'mp3', 'wav', 'aac', 'flac' 等）
+        :return: 提取的音频文件路径
+        """
+
+        base_name = os.path.splitext(video_path)[0]  # 去掉扩展名
+        output_audio_path = f"{base_name}.{audio_format}"
+
+        # 设置不同格式的 ffmpeg 参数
+        if audio_format == "mp3":
+            codec = ["-q:a", "0"]  # 最高质量
+        elif audio_format == "wav":
+            codec = ["-acodec", "pcm_s16le", "-ar", "44100", "-ac", "2"]  # WAV 格式参数
+        elif audio_format == "aac":
+            codec = ["-c:a", "aac"]
+        elif audio_format == "flac":
+            codec = ["-c:a", "flac"]
+        else:
+            raise ValueError(f"不支持的音频格式: {audio_format}")
+
+        # 运行 ffmpeg 提取音频
+        cmd = [
+            "ffmpeg", "-y",
+            "-i", video_path,  # 输入视频
+            "-vn",  # 去除视频流
+            *codec,  # 音频编码参数
+            output_audio_path  # 输出音频文件
+        ]
+
+        subprocess.run(cmd, capture_output=True, text=True, check=True)
+
+        logging.info(f"音频已提取: {output_audio_path}")
+
+        return output_audio_path

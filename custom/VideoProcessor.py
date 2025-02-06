@@ -229,9 +229,7 @@ class VideoProcessor:
     def video_subtitle(
             self,
             video_file: str,
-            audio_file: str = None,
             prompt_text: str = None,
-            add_audio: bool = False,
             subtitle_file: str = None,
             font: str = "fonts/yahei.ttf",
             font_size: int = 70,
@@ -244,9 +242,7 @@ class VideoProcessor:
         """
         给视频添加字幕（以及可选的音频）并输出。
         :param video_file: 视频文件路径
-        :param audio_file: 替换的音频文件路径
         :param prompt_text: 用于生成字幕的文本
-        :param add_audio: 是否添加音频
         :param subtitle_file: SRT 字幕文件路径
         :param font: 字体文件路径
         :param font_size: 字体大小
@@ -260,12 +256,9 @@ class VideoProcessor:
 
         if not os.path.exists(video_file):
             raise FileNotFoundError(f"视频文件不存在: {video_file}")
-        if audio_file and not os.path.exists(audio_file):
-            raise FileNotFoundError(f"音频文件不存在: {audio_file}")
-        
+
         audio_file = VideoProcessor.extract_audio(video_file)
         video_clip = None
-        audio_clip = None
         final_clip = None
         output_video = video_file
 
@@ -315,24 +308,6 @@ class VideoProcessor:
             )
             # 合成视频
             final_clip = CompositeVideoClip([video_clip] + subtitle_clips)
-            # 可选：替换音频
-            if add_audio and audio_file:
-                audio_clip = AudioFileClip(audio_file)
-                # 获取视频和音频的持续时间
-                video_duration = final_clip.duration
-                audio_duration = audio_clip.duration
-                logging.info(f"检查音频与视频长度：video_duration {video_duration} audio_duration {audio_duration}")
-
-                if audio_duration < video_duration:
-                    logging.info(f"视频更短，裁剪视频...")
-                    final_clip = final_clip.subclip(0, audio_duration)
-                elif audio_duration > video_duration:
-                    logging.info(f"音频更短，裁剪音频...")
-                    audio_clip = audio_clip.subclip(0, video_duration)
-                # 添加音频淡出效果，防止尾音
-                audio_clip = audio_clip.fx(afx.audio_fadeout, duration=0.2)
-
-                final_clip = final_clip.without_audio().set_audio(audio_clip)
             # 输出文件路径
             video_dir = Path(video_file).parent
             os.makedirs(video_dir, exist_ok=True)
@@ -363,8 +338,6 @@ class VideoProcessor:
                 final_clip.close()
             if video_clip:
                 video_clip.close()
-            if audio_clip:
-                audio_clip.close()
 
         return output_video, subtitle_file
 

@@ -1,6 +1,8 @@
+import json
 import os
 import subprocess
 from pathlib import Path
+from typing import Any
 
 from fastapi import UploadFile
 from moviepy.editor import *
@@ -81,15 +83,13 @@ class VideoProcessor:
             await upload_file.close()  # 显式关闭上传文件
 
     @staticmethod
-    def convert_video_to_25fps(video_path, video_metadata):
-        """ 使用 MoviePy 将视频转换为 25 FPS """
+    def convert_video_fps(video_path: str, target_fps: int = 25):
+        """ 将视频转换为 指定 FPS """
         # 检查视频帧率
-        r_frame_rate = video_metadata.get("r_frame_rate", "25/1")
-        original_fps = eval(r_frame_rate.strip())  # 将字符串帧率转换为浮点数
-        target_fps = 25
+        original_fps = VideoProcessor.get_video_frame_rate(video_path)
 
         if original_fps != target_fps:
-            logging.info(f"视频帧率为 {original_fps}，转换为 25 FPS")
+            logging.info(f"视频帧率为 {original_fps} FPS，转换为 {target_fps} FPS")
             converted_video_path = add_suffix_to_filename(video_path, f"_{target_fps}")
 
             # 使用 FFmpeg 转换帧率
@@ -121,7 +121,7 @@ class VideoProcessor:
                 TextProcessor.log_error(ex)
                 return None, None
         else:
-            logging.info("视频帧率已经是 25 FPS，无需转换")
+            logging.info(f"视频帧率已经是 {target_fps} FPS，无需转换")
             return video_path, original_fps
 
     @staticmethod
@@ -237,8 +237,9 @@ class VideoProcessor:
             stroke_color: str = "yellow",
             stroke_width: int = 0,
             bottom: int = 10,
-            opacity: int = 0
-    ) -> str:
+            opacity: int = 0,
+            fps: int = 25,
+    ) -> tuple[str | Any, str | None | Any] | None:
         """
         给视频添加字幕（以及可选的音频）并输出。
         :param video_file: 视频文件路径
@@ -251,6 +252,7 @@ class VideoProcessor:
         :param stroke_width: 描边宽度
         :param bottom: 字幕与视频底部的距离
         :param opacity: 字幕透明度 (0-255)
+        :param fps: 目标帧率
         :return: 输出视频的路径
         """
 
@@ -263,15 +265,7 @@ class VideoProcessor:
         output_video = video_file
 
         try:
-            # 加载视频文件
-            video_metadata = VideoProcessor.get_video_metadata(video_file)
-            # 提取关键颜色信息
-            pix_fmt = video_metadata.get("pix_fmt", "yuv420p")
-            color_range = video_metadata.get("color_range", "1")
-            color_space = video_metadata.get("color_space", "1")
-            color_transfer = video_metadata.get("color_transfer", "1")
-            color_primaries = video_metadata.get("color_primaries", "1")
-            video_file, fps = VideoProcessor.convert_video_to_25fps(video_file, video_metadata)
+            video_file, fps = VideoProcessor.convert_video_fps(video_file, fps)
             video_clip = VideoFileClip(video_file)
             video_width = video_clip.w  # 获取视频宽度
             # 如果没有提供字幕文件，使用 MFA 对齐生成
@@ -308,12 +302,29 @@ class VideoProcessor:
             )
             # 合成视频
             final_clip = CompositeVideoClip([video_clip] + subtitle_clips)
+            # 获取原始音频
+            audio_clip = video_clip.audio
+            # 定义淡出时间（单位秒），你可以根据需要调整这个值
+            fade_duration = 0.5
+            # 如果最终视频时长没有超过音频时长，则仅对音频进行淡出处理
+            actual_fade_duration = min(fade_duration, audio_clip.duration)
+            final_audio = audio_clip.audio_fadeout(actual_fade_duration)
+            # 将处理后的音频设置到最终视频中
+            final_clip = final_clip.without_audio().set_audio(final_audio)
             # 输出文件路径
             video_dir = Path(video_file).parent
             os.makedirs(video_dir, exist_ok=True)
             output_video = os.path.join(video_dir, f"{Path(video_file).stem}_output{Path(video_file).suffix}")
+            # 获取原视频元数据
+            video_metadata = VideoProcessor.get_video_metadata(video_file)
+            # 提取关键颜色信息
+            pix_fmt = video_metadata.get("pix_fmt", "yuv420p")
+            color_range = video_metadata.get("color_range", "1")
+            color_space = video_metadata.get("color_space", "1")
+            color_transfer = video_metadata.get("color_transfer", "1")
+            color_primaries = video_metadata.get("color_primaries", "1")
             # 保存视频
-            # # NVIDIA 编码器 codec="h264_nvenc"    CPU编码 codec="libx264"
+            # NVIDIA 编码器 codec="h264_nvenc"    CPU编码 codec="libx264"
             final_clip.write_videofile(
                 output_video,
                 codec="libx264",
@@ -342,18 +353,51 @@ class VideoProcessor:
         return output_video, subtitle_file
 
     @staticmethod
-    def get_video_metadata(video_path):
+    def get_media_metadata(media_path):
+        """
+        使用 ffprobe 提取媒体文件的元数据，并以 JSON 格式返回。
+        """
         cmd = [
-            "ffprobe", "-i", video_path, "-show_streams", "-select_streams", "v", "-hide_banner", "-loglevel", "error"
+            "ffprobe",
+            "-i", media_path,
+            "-show_streams",
+            "-show_format",
+            "-print_format", "json",
+            "-hide_banner",
+            "-loglevel", "error"
         ]
         result = subprocess.run(cmd, capture_output=True, text=True)
-        metadata = {}
-        for line in result.stdout.splitlines():
-            if "=" in line:
-                key, value = line.split("=", 1)
-                metadata[key.strip()] = value.strip()
-        logging.info(metadata)
+
+        try:
+            metadata = json.loads(result.stdout)
+        except json.JSONDecodeError:
+            metadata = {}
+
         return metadata
+
+    @staticmethod
+    def get_video_metadata(media_path):
+        """获取视频文件的元数据信息"""
+        metadata = VideoProcessor.get_media_metadata(media_path)
+        # 查找第一个视频流
+        video_stream = next((stream for stream in metadata.get("streams", []) if stream.get("codec_type") == "video"),
+                            None)
+        if not video_stream:
+            raise ValueError("未找到视频流")
+
+        return video_stream
+
+    @staticmethod
+    def get_video_frame_rate(media_path):
+        """获取视频文件的帧率"""
+        video_metadata = VideoProcessor.get_video_metadata(media_path)
+        # 获取 r_frame_rate
+        r_frame_rate = video_metadata.get("r_frame_rate", "0/1")
+        # 计算帧率
+        num, denom = map(int, r_frame_rate.split('/'))
+        frame_rate = num / denom if denom != 0 else 0
+
+        return frame_rate
 
     @staticmethod
     def extract_audio(video_path, audio_format="wav"):

@@ -84,6 +84,7 @@ async def process_video(
         stroke_width: int = Form(default=0, description="描边宽度"),
         bottom: int = Form(default=10, description="字幕与视频底部的距离"),
         opacity: int = Form(default=0, description="字幕透明度 (0-255)"),
+        fps: int = Form(default=25, description="目标帧率"),
         srt: UploadFile = File(default=None, description="上传的字幕文件(可选，不传则自动生成)"),
 ):
     """
@@ -116,7 +117,8 @@ async def process_video(
             stroke_color=stroke_color,
             stroke_width=stroke_width,
             bottom=bottom,
-            opacity=opacity
+            opacity=opacity,
+            fps=fps
         )
         # 返回视频响应
         return JSONResponse({"errcode": 0, "errmsg": "ok", "video_path": video_path, "subtitle_path": subtitle_path})

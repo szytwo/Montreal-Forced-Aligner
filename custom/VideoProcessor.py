@@ -301,16 +301,18 @@ class VideoProcessor:
                 opacity=opacity
             )
             # 合成视频
-            final_clip = CompositeVideoClip([video_clip] + subtitle_clips)
+            final_clip = CompositeVideoClip([video_clip] + subtitle_clips).set_duration(video_clip.duration)
             # 获取原始音频
             audio_clip = video_clip.audio
             # 定义淡出时间（单位秒），你可以根据需要调整这个值
-            fade_duration = 0.5
+            fade_duration = 0.2
             # 如果最终视频时长没有超过音频时长，则仅对音频进行淡出处理
             actual_fade_duration = min(fade_duration, audio_clip.duration)
-            final_audio = audio_clip.audio_fadeout(actual_fade_duration)
+            final_audio = audio_clip.audio_fadeout(actual_fade_duration).set_duration(video_clip.duration)
             # 将处理后的音频设置到最终视频中
             final_clip = final_clip.without_audio().set_audio(final_audio)
+
+            logging.info(f"Video Duration: {video_clip.duration}, Final Clip Duration: {final_clip.duration}")
             # 输出文件路径
             video_dir = Path(video_file).parent
             os.makedirs(video_dir, exist_ok=True)

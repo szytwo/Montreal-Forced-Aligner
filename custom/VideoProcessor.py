@@ -302,15 +302,23 @@ class VideoProcessor:
             )
             # 合成视频
             final_clip = CompositeVideoClip([video_clip] + subtitle_clips).set_duration(video_clip.duration)
-            # 获取原始音频
-            audio_clip = video_clip.audio
-            # 定义淡出时间（单位秒），你可以根据需要调整这个值
-            fade_duration = 0.2
-            # 如果最终视频时长没有超过音频时长，则仅对音频进行淡出处理
-            actual_fade_duration = min(fade_duration, audio_clip.duration)
-            final_audio = audio_clip.audio_fadeout(actual_fade_duration).set_duration(video_clip.duration)
+
+            audio_clip = AudioFileClip(audio_file)
+            # 获取视频和音频的持续时间
+            video_duration = final_clip.duration
+            audio_duration = audio_clip.duration
+            logging.info(f"检查音频与视频长度：video_duration {video_duration} audio_duration {audio_duration}")
+
+            if audio_duration < video_duration:
+                logging.info(f"视频更短，裁剪视频...")
+                final_clip = final_clip.subclip(0, audio_duration)
+            elif audio_duration > video_duration:
+                logging.info(f"音频更短，裁剪音频...")
+                audio_clip = audio_clip.subclip(0, video_duration)
+            # 添加音频淡出效果，防止尾音
+            audio_clip = audio_clip.fx(afx.audio_fadeout, duration=0.2)
             # 将处理后的音频设置到最终视频中
-            final_clip = final_clip.without_audio().set_audio(final_audio)
+            final_clip = final_clip.without_audio().set_audio(audio_clip)
 
             logging.info(f"Video Duration: {video_clip.duration}, Final Clip Duration: {final_clip.duration}")
             # 输出文件路径

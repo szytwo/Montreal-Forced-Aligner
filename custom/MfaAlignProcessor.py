@@ -1,14 +1,16 @@
 import os
 import subprocess
 from pathlib import Path
-from custom.file_utils import logging, get_full_path
+
 from custom.SrtProcessor import SrtProcessor
 from custom.TextProcessor import TextProcessor
+from custom.file_utils import logging, get_full_path
+
 
 class MfaAlignProcessor:
     def __init__(self,
                  model_dir="MFA/pretrained_models"
-        ):
+                 ):
         """
         初始化MFA音频与文本对齐处理器。
         :param model_dir: 模型文件目录
@@ -58,6 +60,11 @@ class MfaAlignProcessor:
             "--clean",  # 清理运行前的旧文件
             "--final_clean",  # 清理运行后的临时文件
             "--overwrite",  # 覆盖旧输出
+            "--textgrid_cleanup",  # 打开/关闭 TextGrids 的后处理，以清理静音并重新组合复合词和词语
+            "--cleanup_textgrids",
+            "--use_mp",  # 启用多进程
+            "--no_use_threading",  # 禁用多线程
+            "--single_speaker",  # 单说话人模式，禁用说话人自适应
             f"--num_jobs", str(num_jobs)  # 使用 CPU 核心数
         ]
 

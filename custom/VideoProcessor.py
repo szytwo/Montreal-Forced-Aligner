@@ -276,7 +276,7 @@ class VideoProcessor:
                 subtitle_file = mfa_align_processor.align_audio_with_text(
                     audio_path=audio_file,
                     text=prompt_text,
-                    min_line_length=0,
+                    min_line_length=4,
                     max_line_length=maxsize,
                 )
                 # MFA失败，则使用ASR
@@ -284,7 +284,7 @@ class VideoProcessor:
                     asr_processor = AsrProcessor()
                     subtitle_file = asr_processor.asr_to_srt(
                         audio_path=audio_file,
-                        min_line_length=0,
+                        min_line_length=4,
                         max_line_length=maxsize,
                     )
 

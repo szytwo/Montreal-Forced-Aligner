@@ -65,7 +65,7 @@ class SrtProcessor:
 
             if word:
                 # 判断是中文还是英文并处理
-                if SrtProcessor.is_english(word) and current_length > 0:
+                if SrtProcessor.is_english(word) and len(word) >= 2 and current_length > 0:
                     word = ' ' + word  # 英文单词前加空格
                 # 增加当前单词到字幕行
                 current_subtitle.append(word)

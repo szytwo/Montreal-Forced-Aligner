@@ -65,6 +65,7 @@ class MfaAlignProcessor:
             "--use_mp",  # 启用多进程
             "--no_use_threading",  # 禁用多线程
             "--single_speaker",  # 单说话人模式，禁用说话人自适应
+            "--ignore_case", "false",  # 禁用转换为小写
             f"--num_jobs", str(num_jobs)  # 使用 CPU 核心数
         ]
 

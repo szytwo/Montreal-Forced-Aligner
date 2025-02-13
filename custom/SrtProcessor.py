@@ -1,7 +1,10 @@
 import re
-from textgrid import TextGrid
 from datetime import timedelta
+
+from textgrid import TextGrid
+
 from custom.file_utils import logging
+
 
 class SrtProcessor:
     @staticmethod
@@ -68,7 +71,9 @@ class SrtProcessor:
                 current_subtitle.append(word)
                 current_length += len(word)
             # 如果无文字或长度超出限制，则分行
-            if (not word and current_length >= min_line_length) or current_length >= max_line_length:
+            if (not word
+                and interval.maxTime - interval.minTime > 0.1
+                and current_length >= min_line_length) or current_length >= max_line_length:
                 if current_subtitle:  # 确保当前字幕行非空
                     subtitle_text = ''.join(current_subtitle)
                     subtitles.append((subtitle_id, start_time, end_time, subtitle_text))

@@ -60,8 +60,8 @@ class MfaAlignProcessor:
             "--clean",  # 清理运行前的旧文件
             "--final_clean",  # 清理运行后的临时文件
             "--overwrite",  # 覆盖旧输出
-            # "--textgrid_cleanup",  # 打开/关闭 TextGrids 的后处理，以清理静音并重新组合复合词和词语
-            # "--cleanup_textgrids",
+            "--textgrid_cleanup",  # 打开/关闭 TextGrids 的后处理，以清理静音并重新组合复合词和词语
+            "--cleanup_textgrids",
             "--use_mp",  # 启用多进程
             "--no_use_threading",  # 禁用多线程
             "--single_speaker",  # 单说话人模式，禁用说话人自适应

@@ -76,7 +76,7 @@ class SrtProcessor:
             # 如果无文字或长度超出限制，则分行
             if (not is_single_letter
                     and ((not word
-                          and interval.maxTime - interval.minTime > 0.08
+                          and interval.maxTime - interval.minTime > 0.15
                           and current_length >= min_line_length
                          )
                          or current_length >= max_line_length

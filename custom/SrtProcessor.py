@@ -2,6 +2,7 @@ import re
 from datetime import timedelta
 
 from textgrid import TextGrid
+from zhconv import convert
 
 from custom.TextProcessor import TextProcessor
 from custom.file_utils import logging
@@ -104,6 +105,9 @@ class SrtProcessor:
         with open(output_srt_path, 'w', encoding='utf-8') as f:
             for subtitle in subtitles:
                 subtitle_id, start_time, end_time, text = subtitle
+                if language == 'zh-cn':
+                    # 转换为简体中文
+                    text = convert(text, 'zh-cn')
                 # 使用格式化函数
                 start_time_str = SrtProcessor.format_time(start_time)
                 end_time_str = SrtProcessor.format_time(end_time)

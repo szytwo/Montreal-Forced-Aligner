@@ -62,18 +62,26 @@ class SrtProcessor:
             if start_time is None:
                 start_time = interval.minTime
             end_time = interval.maxTime
+            is_single_letter = False  # 单字母，不分行
 
             if word:
+                is_en = SrtProcessor.is_english(word)
+                is_single_letter = is_en and len(word) == 1
                 # 判断是中文还是英文并处理
-                if SrtProcessor.is_english(word) and len(word) >= 2 and current_length > 0:
+                if is_en and len(word) >= 2 and current_length > 0:
                     word = ' ' + word  # 英文单词前加空格
                 # 增加当前单词到字幕行
                 current_subtitle.append(word)
                 current_length += len(word)
             # 如果无文字或长度超出限制，则分行
-            if (not word
-                and interval.maxTime - interval.minTime > 0.1
-                and current_length >= min_line_length) or current_length >= max_line_length:
+            if (not is_single_letter
+                    and ((not word
+                          and interval.maxTime - interval.minTime > 0.1
+                          and current_length >= min_line_length
+                         )
+                         or current_length >= max_line_length
+                    )
+            ):
                 if current_subtitle:  # 确保当前字幕行非空
                     subtitle_text = ''.join(current_subtitle)
                     subtitles.append((subtitle_id, start_time, end_time, subtitle_text))

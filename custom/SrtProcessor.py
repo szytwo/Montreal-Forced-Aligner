@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from textgrid import TextGrid
 
+from custom.TextProcessor import TextProcessor
 from custom.file_utils import logging
 
 
@@ -46,6 +47,8 @@ class SrtProcessor:
         :param min_line_length: 行最小长度
         :param max_line_length: 行最大长度
         """
+        keywords = TextProcessor.get_keywords()
+        exceptions = keywords["exceptions"]  # 获取例外单词列表
         tg = TextGrid.fromFile(textgrid_path)
         tier = tg[0]  # 假设对齐文本在第一个层级
 
@@ -69,7 +72,8 @@ class SrtProcessor:
                 is_single_letter = is_en and len(word) == 1
                 # 判断是中文还是英文并处理
                 if is_en and len(word) >= 2 and current_length > 0:
-                    word = ' ' + word  # 英文单词前加空格
+                    if word.lower() not in exceptions:  # 判断单词是否在例外列表中
+                        word = ' ' + word  # 英文单词前加空格
                 # 增加当前单词到字幕行
                 current_subtitle.append(word)
                 current_length += len(word)

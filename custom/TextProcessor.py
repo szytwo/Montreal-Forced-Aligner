@@ -1,4 +1,5 @@
 import datetime
+import json
 import os
 import traceback
 
@@ -74,3 +75,9 @@ class TextProcessor:
             log_file.write(error_traceback + '\n')
 
         logging.info(f"发生错误: {str(exception)}\n错误信息已保存至: {log_file_path}")
+
+    @staticmethod
+    def get_keywords(config_file='.\custom\keywords.json'):
+        with open(config_file, 'r', encoding='utf-8') as file:
+            words_list = json.load(file)
+        return words_list

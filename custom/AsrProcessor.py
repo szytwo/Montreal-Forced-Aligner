@@ -1,16 +1,19 @@
 import os
-import requests
 from pathlib import Path
-from custom.file_utils import logging, get_full_path
+
+import requests
+
 from custom.SrtProcessor import SrtProcessor
 from custom.TextProcessor import TextProcessor
+from custom.file_utils import logging, get_full_path
+
 
 class AsrProcessor:
     def __init__(self):
         """
         初始化ASR音频与文本对齐处理器。
         """
-        asr_url = os.getenv("ASR_URL", "") #asr接口
+        asr_url = os.getenv("ASR_URL", "")  # asr接口
         self.asr_url = asr_url
 
     def send_asr_request(self, audio_path, lang='auto'):
@@ -73,13 +76,21 @@ class AsrProcessor:
 
             if result:
                 # 提取文本和时间戳数据
+                text = result['result'][0]['clean_text']
                 timestamp_data = result['result'][0]['timestamp']
+                language = TextProcessor.detect_language(text)
                 # 生成 TextGrid 文件
                 textgrid_file = os.path.join(audio_dir, f"{audio_name}.TextGrid")
                 AsrProcessor.generate_textgrid(timestamp_data, textgrid_file)
                 # 将 TextGrid 文件转换为 SRT 文件
                 srt_file = os.path.join(audio_dir, f"{audio_name}.srt")
-                SrtProcessor.textgrid_to_srt(textgrid_file, srt_file, min_line_length, max_line_length)
+                SrtProcessor.textgrid_to_srt(
+                    textgrid_path=textgrid_file,
+                    output_srt_path=srt_file,
+                    min_line_length=min_line_length,
+                    max_line_length=max_line_length,
+                    language=language
+                )
 
                 logging.info("ASR 音频与文本对齐完成!")
 

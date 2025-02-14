@@ -38,7 +38,7 @@ class SrtProcessor:
         return re.sub(punctuation_pattern, '', text)
 
     @staticmethod
-    def textgrid_to_srt(textgrid_path, output_srt_path, min_line_length=0, max_line_length=40):
+    def textgrid_to_srt(textgrid_path, output_srt_path, min_line_length=0, max_line_length=40, language='auto'):
         """
         将 TextGrid 文件转换为 SRT 字幕文件
 
@@ -46,6 +46,7 @@ class SrtProcessor:
         :param output_srt_path: 输出的 SRT 文件路径
         :param min_line_length: 行最小长度
         :param max_line_length: 行最大长度
+        :param language: 语言代码
         """
         keywords = TextProcessor.get_keywords()
         exceptions = keywords["exceptions"]  # 获取例外单词列表
@@ -72,7 +73,9 @@ class SrtProcessor:
                 is_single_letter = is_en and len(word) == 1
                 # 判断是中文还是英文并处理
                 if is_en and len(word) >= 2 and current_length > 0:
-                    if word.lower() not in exceptions:  # 判断单词是否在例外列表中
+                    if language != 'en' and word.lower() in exceptions:  # 判断单词是否在例外列表中
+                        word = word
+                    else:
                         word = ' ' + word  # 英文单词前加空格
                 # 增加当前单词到字幕行
                 current_subtitle.append(word)

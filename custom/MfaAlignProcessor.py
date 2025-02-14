@@ -81,7 +81,13 @@ class MfaAlignProcessor:
             textgrid_file = os.path.join(audio_dir, f"{audio_name}.TextGrid")
             srt_file = os.path.join(audio_dir, f"{audio_name}.srt")
             # 将 TextGrid 文件转换为 SRT 文件
-            SrtProcessor.textgrid_to_srt(textgrid_file, srt_file, min_line_length, max_line_length)
+            SrtProcessor.textgrid_to_srt(
+                textgrid_path=textgrid_file,
+                output_srt_path=srt_file,
+                min_line_length=min_line_length,
+                max_line_length=max_line_length,
+                language=language
+            )
 
             return srt_file
         except subprocess.CalledProcessError as e:

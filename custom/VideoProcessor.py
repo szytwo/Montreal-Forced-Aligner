@@ -1,5 +1,4 @@
 import json
-import os
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -325,14 +324,9 @@ class VideoProcessor:
             video_dir = Path(video_file).parent
             os.makedirs(video_dir, exist_ok=True)
             output_video = os.path.join(video_dir, f"{Path(video_file).stem}_output{Path(video_file).suffix}")
-            # 获取原视频元数据
-            video_metadata = VideoProcessor.get_video_metadata(video_file)
             # 提取关键颜色信息
-            pix_fmt = video_metadata.get("pix_fmt", "yuv420p")
-            color_range = video_metadata.get("color_range", "1")
-            color_space = video_metadata.get("color_space", "1")
-            color_transfer = video_metadata.get("color_transfer", "1")
-            color_primaries = video_metadata.get("color_primaries", "1")
+            pix_fmt, color_range, color_space, color_transfer, color_primaries = VideoProcessor.get_video_colorinfo(
+                video_file)
             # 保存视频
             # NVIDIA 编码器 codec="h264_nvenc"    CPU编码 codec="libx264"
             final_clip.write_videofile(
@@ -408,6 +402,28 @@ class VideoProcessor:
         frame_rate = num / denom if denom != 0 else 0
 
         return frame_rate
+
+    @staticmethod
+    def get_video_colorinfo(media_path):
+        """获取视频文件的颜色信息"""
+        # 获取原视频元数据
+        video_metadata = VideoProcessor.get_video_metadata(media_path)
+        # 提取关键颜色信息
+        pix_fmt = video_metadata.get("pix_fmt", "yuv420p")
+        color_range = video_metadata.get("color_range", "1")
+        color_space = video_metadata.get("color_space", "1")
+        color_transfer = video_metadata.get("color_transfer", "1")
+        color_primaries = video_metadata.get("color_primaries", "1")
+
+        if color_space.lower() == "reserved":
+            color_space = "bt709"
+            logging.warning(f"检测到 color_space 为 'reserved'，已替换为默认值 'bt709'")
+
+        if color_primaries.lower() == "reserved":
+            color_primaries = "bt709"
+            logging.warning(f"检测到 color_primaries 为 'reserved'，已替换为默认值 'bt709'")
+
+        return pix_fmt, color_range, color_space, color_transfer, color_primaries
 
     @staticmethod
     def extract_audio(video_path, audio_format="wav"):

@@ -3,7 +3,6 @@ numpy==1.26.4
 seaborn
 fastapi
 moviepy==1.0.3
-langdetect
 torchaudio
 pydub
 noisereduce
@@ -15,3 +14,4 @@ dragonmapper==0.3.0
 hanziconv==0.3.2
 
 zhconv
+fasttext-wheel

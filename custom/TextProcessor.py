@@ -3,7 +3,7 @@ import json
 import os
 import traceback
 
-from langdetect import detect
+import fasttext
 
 from custom.file_utils import logging
 
@@ -18,12 +18,21 @@ class TextProcessor:
         """
         检测输入文本的语言。
         :param text: 输入文本
-        :return: 返回检测到的语言代码（如 'en', 'zh-cn'）
+        :return: 返回检测到的语言代码（如 'en', 'zh', 'ja', 'ko'）
         """
+
+        # 加载预训练的语言检测模型
+        fasttext_model = fasttext.load_model("./fasttext/lid.176.bin")
+
         try:
             lang = None
+            text = text.strip()
             if text:
-                lang = detect(text)
+                predictions = fasttext_model.predict(text, k=1)  # 获取 top-1 语言预测
+                lang = predictions[0][0].replace("__label__", "")  # 解析语言代码
+                confidence = predictions[1][0]  # 置信度
+                return lang if confidence > 0.6 else None
+
             logging.info(f'Detected language: {lang}')
             return lang
         except Exception as e:

@@ -264,10 +264,10 @@ class VideoProcessor:
         output_video = video_file
         language = TextProcessor.detect_language(prompt_text)
 
-        if language == 'ja':
-            font = "fonts/Noto_Sans_JP/static/NotoSansJP-Black.ttf",
-        elif language == 'ko':
-            font = "fonts/Noto_Sans_KR/static/NotoSansKR-Black.ttf",
+        if language == 'ja' and not font.startswith("fonts/JA/"):
+            font = "fonts/JA/Noto_Sans_JP/static/NotoSansJP-Black.ttf"
+        elif language == 'ko' and not font.startswith("fonts/KO/"):
+            font = "fonts/KO/Noto_Sans_KR/static/NotoSansKR-Black.ttf"
 
         try:
             video_file, fps = VideoProcessor.convert_video_fps(video_file, fps)

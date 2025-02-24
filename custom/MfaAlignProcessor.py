@@ -33,6 +33,12 @@ class MfaAlignProcessor:
         if language == 'en':
             dictionary_name = 'english_uk_mfa.dict'
             acoustic_name = 'english_mfa.zip'
+        elif language == 'ja':
+            dictionary_name = 'japanese_mfa.dict'
+            acoustic_name = 'japanese_mfa.zip'
+        elif language == 'ko':
+            dictionary_name = 'korean_mfa.dict'
+            acoustic_name = 'korean_mfa.zip'
 
         model_dir = get_full_path(self.model_dir)
         dictionary_path = os.path.join(model_dir, 'dictionary', dictionary_name)

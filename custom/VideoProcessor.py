@@ -262,6 +262,12 @@ class VideoProcessor:
         video_clip = None
         final_clip = None
         output_video = video_file
+        language = TextProcessor.detect_language(prompt_text)
+
+        if language == 'ja':
+            font = "fonts/Noto_Sans_JP/static/NotoSansJP-Black.ttf",
+        elif language == 'ko':
+            font = "fonts/Noto_Sans_KR/static/NotoSansKR-Black.ttf",
 
         try:
             video_file, fps = VideoProcessor.convert_video_fps(video_file, fps)
@@ -277,6 +283,7 @@ class VideoProcessor:
                     text=prompt_text,
                     min_line_length=4,
                     max_line_length=maxsize,
+                    language=language
                 )
                 # MFA失败，则使用ASR
                 if not subtitle_file:

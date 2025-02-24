@@ -17,15 +17,17 @@ class MfaAlignProcessor:
         """
         self.model_dir = model_dir
 
-    def align_audio_with_text(self, audio_path, text, min_line_length=0, max_line_length=40):
+    def align_audio_with_text(self, audio_path, text, min_line_length=0, max_line_length=40, language=None):
         """
         使用 MFA 进行音频与文本对齐
         :param audio_path: 包含音频文件的路径
         :param text: 文本
         :param min_line_length: 行最小长度
         :param max_line_length: 行最大长度
+        :param language: 语言
         """
-        language = TextProcessor.detect_language(text)
+        if not language:
+            language = TextProcessor.detect_language(text)
         # 根据语言选择模型和字典路径
         dictionary_name = 'mandarin_china_mfa.dict'
         acoustic_name = 'mandarin_mfa.zip'

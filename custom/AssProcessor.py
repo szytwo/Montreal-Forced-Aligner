@@ -76,6 +76,8 @@ def create_subtitle_ass(
         font_name = get_font_name(font_path)
     except:
         font_name = "Arial"  # 回退默认字体
+    # 自动从字体路径提取字体目录
+    font_dir = os.path.dirname(os.path.abspath(font_path))
     # 生成 ASS 文件路径
     base_path = os.path.splitext(subtitle_file)[0]
     ass_path = f"{base_path}.ass"
@@ -135,7 +137,9 @@ def create_subtitle_ass(
     with open(ass_path, 'w', encoding='utf-8') as f:
         f.write('\n'.join(ass_content))
 
-    return ass_path
+    logging.info(f"Ass字幕已生成: {ass_path}，{font_dir}")
+
+    return ass_path, font_dir
 
 
 def subtitle_with_ffmpeg(

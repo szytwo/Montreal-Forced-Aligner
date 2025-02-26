@@ -1,7 +1,10 @@
 import os
+import subprocess
 
 from PIL import ImageColor
 from fontTools.ttLib import TTFont
+
+from custom.file_utils import logging, add_suffix_to_filename
 
 
 # 颜色和透明度转换函数
@@ -135,18 +138,25 @@ def create_subtitle_ass(
     return ass_path
 
 
-def burn_subtitle_with_ffmpeg(
-        self,
-        video_input: str,
-        video_output: str,
+def subtitle_with_ffmpeg(
+        video_path: str,
         ass_path: str,
         font_dir: str = "fonts"  # 字体文件所在目录
 ) -> str:
     """使用 FFmpeg 烧录字幕到视频"""
-    cmd = (
-        f'ffmpeg -y -i "{video_input}" '  # -y 覆盖输出文件
-        f'-vf "subtitles=\'{ass_path}\':fontsdir=\'{font_dir}\'" '  # 指定字体目录
-        f'-c:a copy "{video_output}"'  # 保持音频流不变
-    )
-    os.system(cmd)
+
+    video_output = add_suffix_to_filename(video_path, f"_ass")
+    cmd = [
+        "ffmpeg",
+        "-i", video_path,  # 输入视频
+        "-vf", f'"subtitles=\'{ass_path}\':fontsdir=\'{font_dir}\'"',  # 指定字体目录
+        '-c:a', "copy",  # 保持音频流不变
+        "-crf", "18",  # 设置压缩质量
+        "-preset", "slow",  # 设置编码速度/质量平衡
+        "-y",
+        video_output
+    ]
+
+    subprocess.run(cmd, capture_output=True, text=True, check=True)
+    logging.info(f"字幕已到烧录视频: {video_output}")
     return video_output

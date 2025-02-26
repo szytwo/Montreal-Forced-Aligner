@@ -1,6 +1,7 @@
 import os
 
 from PIL import ImageColor
+from fontTools.ttLib import TTFont
 
 
 # 颜色和透明度转换函数
@@ -22,11 +23,28 @@ def srt_time_to_ass(srt_time):
     return f"{int(h)}:{int(m):02d}:{int(s):02d}.{cs}"
 
 
+def get_font_name(font_path: str) -> str:
+    """从字体文件中提取字体名称（改进版）"""
+    try:
+        font = TTFont(font_path)
+        # 优先获取 Windows 平台的英文名称
+        for entry in font["name"].names:
+            if entry.platformID == 3 and entry.nameID in [1, 4]:  # Win Unicode 平台
+                return entry.toUnicode()
+        # 次选 Mac 平台名称
+        for entry in font["name"].names:
+            if entry.platformID == 1 and entry.nameID in [1, 4]:  # Mac 平台
+                return entry.toUnicode()
+        return os.path.splitext(os.path.basename(font_path))[0]
+    except Exception as e:
+        raise ValueError(f"字体解析失败: {font_path} - {str(e)}")
+
+
 def create_subtitle_ass(
         subtitle_file: str,
         video_width: int,
         video_height: int,  # 新增视频高度参数
-        font: str = "微软雅黑",  # 改为字体名称，而非文件路径
+        font_path: str = "fonts/yahei.ttf",
         font_size: int = 70,
         font_color: str = "yellow",
         stroke_color: str = "black",
@@ -39,7 +57,7 @@ def create_subtitle_ass(
     :param subtitle_file: SRT 文件路径
     :param video_width: 视频宽度
     :param video_height: 视频高度（新增参数，用于计算位置）
-    :param font: 字体名称（如 "Arial"）
+    :param font_path: 字体文件路径
     :param font_size: 字体大小
     :param font_color: 字体颜色（名称或十六进制，如 "#FFFFFF"）
     :param stroke_color: 描边颜色
@@ -50,7 +68,11 @@ def create_subtitle_ass(
     """
     if not os.path.exists(subtitle_file):
         raise FileNotFoundError(f"字幕文件不存在: {subtitle_file}")
-
+    # 提取字体名称
+    try:
+        font_name = get_font_name(font_path)
+    except:
+        font_name = "Arial"  # 回退默认字体
     # 生成 ASS 文件路径
     base_path = os.path.splitext(subtitle_file)[0]
     ass_path = f"{base_path}.ass"
@@ -90,7 +112,7 @@ def create_subtitle_ass(
         "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, "
         "Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, "
         "Alignment, MarginL, MarginR, MarginV, Encoding",
-        f"Style: Default,{font},{font_size},"
+        f"Style: Default,{font_name},{font_size},"
         f"{color_to_ass(font_color, opacity)},"
         f"{color_to_ass(font_color, opacity)},"
         f"{color_to_ass(stroke_color, 0)},"
@@ -111,3 +133,20 @@ def create_subtitle_ass(
         f.write('\n'.join(ass_content))
 
     return ass_path
+
+
+def burn_subtitle_with_ffmpeg(
+        self,
+        video_input: str,
+        video_output: str,
+        ass_path: str,
+        font_dir: str = "fonts"  # 字体文件所在目录
+) -> str:
+    """使用 FFmpeg 烧录字幕到视频"""
+    cmd = (
+        f'ffmpeg -y -i "{video_input}" '  # -y 覆盖输出文件
+        f'-vf "subtitles=\'{ass_path}\':fontsdir=\'{font_dir}\'" '  # 指定字体目录
+        f'-c:a copy "{video_output}"'  # 保持音频流不变
+    )
+    os.system(cmd)
+    return video_output

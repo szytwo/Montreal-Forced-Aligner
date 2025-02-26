@@ -12,6 +12,7 @@ def color_to_ass(color_str, alpha):
     try:
         rgb = ImageColor.getrgb(color_str)
         bbggrr = f"{rgb[2]:02X}{rgb[1]:02X}{rgb[0]:02X}"
+
         return f"&H{alpha:02X}{bbggrr}"
     except:
         return "&H00FFFFFF"  # 默认白色
@@ -23,6 +24,7 @@ def srt_time_to_ass(srt_time):
     h, m, s = time_str.split(':')
     millis = millis.ljust(3, '0')[:3]
     cs = f"{int(millis) // 10:02d}"
+
     return f"{int(h)}:{int(m):02d}:{int(s):02d}.{cs}"
 
 
@@ -142,18 +144,38 @@ def create_subtitle_ass(
     return ass_path, font_dir
 
 
+def ffmpeg_safe_path(path: str, relcolon: bool = False) -> str:
+    """将路径转换为 FFmpeg 安全的格式"""
+    # 转换为绝对路径并统一正斜杠
+    abs_path = os.path.abspath(path).replace("\\", "/")
+    # 方案1：转换为类 Unix 风格（需 FFmpeg 支持）
+    # 示例：D:/AI/project → /D/AI/project
+    # unix_style = abs_path.replace(":/", "/", 1).replace(":", "", 1)
+    # return f"'{unix_style}'"
+    # 方案2：直接使用正斜杠并转义冒号（通用）
+    # 示例：D:/AI/project → D\:/AI/project
+    if relcolon:
+        abs_path = abs_path.replace(':', '\\\\:')
+
+    return abs_path
+
+
 def subtitle_with_ffmpeg(
         video_path: str,
         ass_path: str,
         font_dir: str = "fonts"  # 字体文件所在目录
 ) -> str:
     """使用 FFmpeg 烧录字幕到视频"""
-
     video_output = add_suffix_to_filename(video_path, f"_ass")
+    video_path = ffmpeg_safe_path(video_path)
+    video_output = ffmpeg_safe_path(video_output)
+    ass_path = ffmpeg_safe_path(ass_path, True)
+    font_dir = ffmpeg_safe_path(font_dir, True)
+
     cmd = [
         "ffmpeg",
         "-i", video_path,  # 输入视频
-        "-vf", f'"subtitles=\'{ass_path}\':fontsdir=\'{font_dir}\'"',  # 指定字体目录
+        "-vf", f"\"subtitles={ass_path}:fontsdir={font_dir}\"",  # 指定字体目录
         '-c:a', "copy",  # 保持音频流不变
         "-crf", "18",  # 设置压缩质量
         "-preset", "slow",  # 设置编码速度/质量平衡
@@ -161,6 +183,9 @@ def subtitle_with_ffmpeg(
         video_output
     ]
 
+    ffmpeg_cmd = " ".join(cmd)  # 打印实际执行的命令（调试用）
+    logging.info(f"执行的 FFmpeg 命令: {ffmpeg_cmd}")
     subprocess.run(cmd, capture_output=True, text=True, check=True)
     logging.info(f"字幕已到烧录视频: {video_output}")
+
     return video_output

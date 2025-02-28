@@ -96,6 +96,7 @@ async def process_video(
     """
 
     try:
+        prompt_text = TextProcessor.clear_text(prompt_text)
         # 初始化处理器
         video_processor = VideoProcessor()
         subtitle_file = None
@@ -144,6 +145,7 @@ async def process_audio(
         JSONResponse: 包含处理结果的 JSON 响应。
     """
     try:
+        prompt_text = TextProcessor.clear_text(prompt_text)
         # 初始化处理器
         audio_processor = AudioProcessor()
 

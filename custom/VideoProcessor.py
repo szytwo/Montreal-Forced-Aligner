@@ -299,8 +299,8 @@ class VideoProcessor:
                     )
 
             if isass:
-                assProcessor = AssProcessor()
-                ass_path, font_dir = assProcessor.create_subtitle_ass(
+                ass_processor = AssProcessor()
+                ass_path, font_dir = ass_processor.create_subtitle_ass(
                     subtitle_file=subtitle_file,
                     video_width=video_width,
                     video_height=video_height,
@@ -313,7 +313,7 @@ class VideoProcessor:
                     opacity=opacity
                 )
 
-                output_video = assProcessor.subtitle_with_ffmpeg(
+                output_video = ass_processor.subtitle_with_ffmpeg(
                     video_path=video_file,
                     ass_path=ass_path,
                     font_dir=font_dir  # 字体文件所在目录

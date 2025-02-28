@@ -17,6 +17,7 @@ IF ERRORLEVEL 1 (
 REM 设置 GPU 环境变量，选择显卡
 set CUDA_VISIBLE_DEVICES=1
 set ASR_URL=http://127.0.0.1:7850/api/v1/asr
+set FFMPEG_PATH=C:\ffmpeg\bin\ffmpeg.exe
 
 REM 执行 Python 脚本
 python api.py  --port 8119

@@ -8,6 +8,7 @@ from moviepy.editor import *
 from tqdm import tqdm
 
 from custom.AsrProcessor import AsrProcessor
+from custom.AssProcessor import AssProcessor
 from custom.MfaAlignProcessor import MfaAlignProcessor
 from custom.TextProcessor import TextProcessor
 from custom.file_utils import logging, add_suffix_to_filename
@@ -238,6 +239,7 @@ class VideoProcessor:
             bottom: int = 10,
             opacity: int = 0,
             fps: int = 25,
+            isass: bool = False
     ) -> tuple[str | Any, str | None | Any] | None:
         """
         给视频添加字幕（以及可选的音频）并输出。
@@ -252,6 +254,7 @@ class VideoProcessor:
         :param bottom: 字幕与视频底部的距离
         :param opacity: 字幕透明度 (0-255)
         :param fps: 目标帧率
+        :param isass: 是否使用ASS
         :return: 输出视频的路径
         """
 
@@ -273,6 +276,7 @@ class VideoProcessor:
             video_file, fps = VideoProcessor.convert_video_fps(video_file, fps)
             video_clip = VideoFileClip(video_file)
             video_width = video_clip.w  # 获取视频宽度
+            video_height = video_clip.h  # 获取视频高度
             # 如果没有提供字幕文件，使用 MFA 对齐生成
             if not subtitle_file and prompt_text:
                 maxsize = video_width / font_size - 2  # 每行最大字符数
@@ -294,64 +298,85 @@ class VideoProcessor:
                         max_line_length=maxsize,
                     )
 
-            # 创建字幕片段
-            subtitle_clips = self.create_subtitle_clip(
-                subtitle_file=subtitle_file,
-                video_width=video_width,
-                font=font,
-                font_size=font_size,
-                font_color=font_color,
-                stroke_color=stroke_color,
-                stroke_width=stroke_width,
-                bottom=bottom,
-                opacity=opacity
-            )
-            # 合成视频
-            final_clip = CompositeVideoClip([video_clip] + subtitle_clips).set_duration(video_clip.duration)
+            if isass:
+                assProcessor = AssProcessor()
+                ass_path, font_dir = assProcessor.create_subtitle_ass(
+                    subtitle_file=subtitle_file,
+                    video_width=video_width,
+                    video_height=video_height,  # 新增视频高度参数
+                    font_path=font,
+                    font_size=font_size,
+                    font_color=font_color,
+                    stroke_color=stroke_color,
+                    stroke_width=stroke_width,
+                    bottom=bottom,
+                    opacity=opacity
+                )
 
-            audio_clip = AudioFileClip(audio_file)
-            # 获取视频和音频的持续时间
-            video_duration = final_clip.duration
-            audio_duration = audio_clip.duration
-            logging.info(f"检查音频与视频长度：video_duration {video_duration} audio_duration {audio_duration}")
+                output_video = assProcessor.subtitle_with_ffmpeg(
+                    video_path=video_file,
+                    ass_path=ass_path,
+                    font_dir=font_dir  # 字体文件所在目录
+                )
+            else:
+                # 创建字幕片段
+                subtitle_clips = self.create_subtitle_clip(
+                    subtitle_file=subtitle_file,
+                    video_width=video_width,
+                    font=font,
+                    font_size=font_size,
+                    font_color=font_color,
+                    stroke_color=stroke_color,
+                    stroke_width=stroke_width,
+                    bottom=bottom,
+                    opacity=opacity
+                )
+                # 合成视频
+                final_clip = CompositeVideoClip([video_clip] + subtitle_clips).set_duration(video_clip.duration)
 
-            if audio_duration < video_duration:
-                logging.info(f"视频更短，裁剪视频...")
-                final_clip = final_clip.subclip(0, audio_duration)
-            elif audio_duration > video_duration:
-                logging.info(f"音频更短，裁剪音频...")
-                audio_clip = audio_clip.subclip(0, video_duration)
-            # 添加音频淡出效果，防止尾音
-            audio_clip = audio_clip.fx(afx.audio_fadeout, duration=0.2)
-            # 将处理后的音频设置到最终视频中
-            final_clip = final_clip.without_audio().set_audio(audio_clip)
+                audio_clip = AudioFileClip(audio_file)
+                # 获取视频和音频的持续时间
+                video_duration = final_clip.duration
+                audio_duration = audio_clip.duration
+                logging.info(f"检查音频与视频长度：video_duration {video_duration} audio_duration {audio_duration}")
 
-            logging.info(f"Video Duration: {video_clip.duration}, Final Clip Duration: {final_clip.duration}")
-            # 输出文件路径
-            video_dir = Path(video_file).parent
-            os.makedirs(video_dir, exist_ok=True)
-            output_video = os.path.join(video_dir, f"{Path(video_file).stem}_output{Path(video_file).suffix}")
-            # 提取关键颜色信息
-            pix_fmt, color_range, color_space, color_transfer, color_primaries = VideoProcessor.get_video_colorinfo(
-                video_file)
-            # 保存视频
-            # NVIDIA 编码器 codec="h264_nvenc"    CPU编码 codec="libx264"
-            final_clip.write_videofile(
-                output_video,
-                codec="libx264",
-                fps=final_clip.fps,
-                audio_codec="aac",
-                audio_bitrate="192k",
-                preset="slow",
-                ffmpeg_params=[
-                    "-crf", "18",
-                    "-pix_fmt", pix_fmt,  # 设置像素格式
-                    "-color_range", color_range,  # 设置色彩范围
-                    "-colorspace", color_space,  # 设置色彩空间
-                    "-color_trc", color_transfer,  # 设置色彩传递特性
-                    "-color_primaries", color_primaries,  # 设置色彩基准
-                ]
-            )
+                if audio_duration < video_duration:
+                    logging.info(f"视频更短，裁剪视频...")
+                    final_clip = final_clip.subclip(0, audio_duration)
+                elif audio_duration > video_duration:
+                    logging.info(f"音频更短，裁剪音频...")
+                    audio_clip = audio_clip.subclip(0, video_duration)
+                # 添加音频淡出效果，防止尾音
+                audio_clip = audio_clip.fx(afx.audio_fadeout, duration=0.2)
+                # 将处理后的音频设置到最终视频中
+                final_clip = final_clip.without_audio().set_audio(audio_clip)
+
+                logging.info(f"Video Duration: {video_clip.duration}, Final Clip Duration: {final_clip.duration}")
+                # 输出文件路径
+                video_dir = Path(video_file).parent
+                os.makedirs(video_dir, exist_ok=True)
+                output_video = os.path.join(video_dir, f"{Path(video_file).stem}_output{Path(video_file).suffix}")
+                # 提取关键颜色信息
+                pix_fmt, color_range, color_space, color_transfer, color_primaries = VideoProcessor.get_video_colorinfo(
+                    video_file)
+                # 保存视频
+                # NVIDIA 编码器 codec="h264_nvenc"    CPU编码 codec="libx264"
+                final_clip.write_videofile(
+                    output_video,
+                    codec="libx264",
+                    fps=final_clip.fps,
+                    audio_codec="aac",
+                    audio_bitrate="192k",
+                    preset="slow",
+                    ffmpeg_params=[
+                        "-crf", "18",
+                        "-pix_fmt", pix_fmt,  # 设置像素格式
+                        "-color_range", color_range,  # 设置色彩范围
+                        "-colorspace", color_space,  # 设置色彩空间
+                        "-color_trc", color_transfer,  # 设置色彩传递特性
+                        "-color_primaries", color_primaries,  # 设置色彩基准
+                    ]
+                )
         except Exception as e:
             TextProcessor.log_error(e)
         finally:

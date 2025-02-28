@@ -96,9 +96,18 @@ class AssProcessor:
         base_path = os.path.splitext(subtitle_file)[0]
         ass_path = f"{base_path}.ass"
 
-        # 根据视频宽度调整字体大小（示例逻辑，按需调整）
+        # 以 1280px 宽度的视频为参照，自动适配字体大小
         reference_width = 1280
         font_size = int(font_size * (video_width / reference_width))
+        # 自动根据字体大小设置高度
+        line_height_ratio = 1.2  # 行间距比例，通常 1.2-1.5 比较合适
+        single_line_height = int(font_size * line_height_ratio)  # 单行高度
+        max_lines = 3  # 最大行数
+        # 自动根据字体大小计算字幕高度
+        calculated_height = single_line_height * max_lines
+        min_bottom = 10  # 设定最小底部距离，避免过小或负数
+        # 自动适应bottom兼容多行，并确保不为负数或过小
+        bottom = max(min_bottom, bottom - (single_line_height * (max_lines - 1)))
 
         # 解析 SRT 文件
         subtitles = []

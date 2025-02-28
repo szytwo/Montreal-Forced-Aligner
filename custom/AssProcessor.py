@@ -77,14 +77,12 @@ class AssProcessor:
         # 生成 ASS 文件路径
         base_path = os.path.splitext(subtitle_file)[0]
         ass_path = f"{base_path}.ass"
-
         # 以 1280px 宽度的视频为参照，自动适配字体大小
         reference_width = 1280
         font_size = int(font_size * (video_width / reference_width))
         _, line_height = TextProcessor.get_font_size(font_path, font_size, "字幕字体")
         # 自动适应bottom，并确保不为负数或过小
         bottom = max(line_height, bottom)
-
         # 解析 SRT 文件
         subtitles = []
         try:

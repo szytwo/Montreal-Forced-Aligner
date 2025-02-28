@@ -87,7 +87,7 @@ async def process_video(
         opacity: int = Form(default=0, description="字幕透明度 (0-255)"),
         fps: int = Form(default=25, description="目标帧率"),
         srt: UploadFile = File(default=None, description="上传的字幕文件(可选，不传则自动生成)"),
-        isass: bool = Form(default=False, description="是否使用ass文件"),
+        isass: bool = Form(default=True, description="是否使用ass文件"),
 ):
     """
     处理视频和音频，生成带有字幕的视频。

@@ -2,7 +2,6 @@ import os
 import subprocess
 
 from PIL import ImageColor
-from fontTools.ttLib import TTFont
 
 from custom.TextProcessor import TextProcessor
 from custom.file_utils import logging, add_suffix_to_filename
@@ -39,23 +38,6 @@ class AssProcessor:
 
         return f"{int(h)}:{int(m):02d}:{int(s):02d}.{cs}"
 
-    @staticmethod
-    def get_font_name(font_path: str) -> str:
-        """从字体文件中提取字体名称（改进版）"""
-        try:
-            font = TTFont(font_path)
-            # 优先获取 Windows 平台的英文名称
-            for entry in font["name"].names:
-                if entry.platformID == 3 and entry.nameID in [1, 4]:  # Win Unicode 平台
-                    return entry.toUnicode()
-            # 次选 Mac 平台名称
-            for entry in font["name"].names:
-                if entry.platformID == 1 and entry.nameID in [1, 4]:  # Mac 平台
-                    return entry.toUnicode()
-            return os.path.splitext(os.path.basename(font_path))[0]
-        except Exception as e:
-            raise ValueError(f"字体解析失败: {font_path} - {str(e)}")
-
     def create_subtitle_ass(self,
                             subtitle_file: str,
                             video_width: int,
@@ -86,7 +68,7 @@ class AssProcessor:
             raise FileNotFoundError(f"字幕文件不存在: {subtitle_file}")
         # 提取字体名称
         try:
-            font_name = self.get_font_name(font_path)
+            font_name = TextProcessor.get_font_name(font_path)
         except Exception as e:
             TextProcessor.log_error(e)
             font_name = "Arial"  # 回退默认字体

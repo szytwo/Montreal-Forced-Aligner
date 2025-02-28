@@ -5,6 +5,7 @@ import traceback
 
 import fasttext
 from PIL import ImageFont
+from fontTools.ttLib import TTFont
 
 from custom.file_utils import logging
 
@@ -91,6 +92,23 @@ class TextProcessor:
         with open(config_file, 'r', encoding='utf-8') as file:
             words_list = json.load(file)
         return words_list
+
+    @staticmethod
+    def get_font_name(font_path: str) -> str:
+        """从字体文件中提取字体名称（改进版）"""
+        try:
+            font = TTFont(font_path)
+            # 优先获取 Windows 平台的英文名称
+            for entry in font["name"].names:
+                if entry.platformID == 3 and entry.nameID in [1, 4]:  # Win Unicode 平台
+                    return entry.toUnicode()
+            # 次选 Mac 平台名称
+            for entry in font["name"].names:
+                if entry.platformID == 1 and entry.nameID in [1, 4]:  # Mac 平台
+                    return entry.toUnicode()
+            return os.path.splitext(os.path.basename(font_path))[0]
+        except Exception as e:
+            raise ValueError(f"字体解析失败: {font_path} - {str(e)}")
 
     @staticmethod
     def get_font_size(font_path, font_size, token):

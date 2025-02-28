@@ -81,15 +81,9 @@ class AssProcessor:
         # 以 1280px 宽度的视频为参照，自动适配字体大小
         reference_width = 1280
         font_size = int(font_size * (video_width / reference_width))
-        # 自动根据字体大小设置高度
-        line_height_ratio = 1.2  # 行间距比例，通常 1.2-1.5 比较合适
-        single_line_height = int(font_size * line_height_ratio)  # 单行高度
-        max_lines = 3  # 最大行数
-        # 自动根据字体大小计算字幕高度
-        calculated_height = single_line_height * max_lines
-        min_bottom = 10  # 设定最小底部距离，避免过小或负数
-        # 自动适应bottom兼容多行，并确保不为负数或过小
-        bottom = max(min_bottom, bottom - (single_line_height * (max_lines - 1)))
+        _, line_height = TextProcessor.get_font_size(font_path, font_size, "字幕字体")
+        # 自动适应bottom，并确保不为负数或过小
+        bottom = max(line_height, bottom)
 
         # 解析 SRT 文件
         subtitles = []
@@ -122,7 +116,7 @@ class AssProcessor:
             "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, "
             "Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, "
             "Alignment, MarginL, MarginR, MarginV, Encoding",
-            f"Style: Default,{font_name},{font_size},"
+            f"Style: Default,{font_name},{line_height},"
             f"{self.color_to_ass(font_color, opacity)},"
             f"{self.color_to_ass(font_color, opacity)},"
             f"{self.color_to_ass(stroke_color, 0)},"

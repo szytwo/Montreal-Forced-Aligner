@@ -4,6 +4,7 @@ import os
 import traceback
 
 import fasttext
+from PIL import ImageFont
 
 from custom.file_utils import logging
 
@@ -90,3 +91,20 @@ class TextProcessor:
         with open(config_file, 'r', encoding='utf-8') as file:
             words_list = json.load(file)
         return words_list
+
+    @staticmethod
+    def get_font_size(font_path, font_size, token):
+        """
+        获取精确字体参数。
+
+        :param font_path: 字体路径
+        :param font_size: 字体大小
+        :param token: 文本
+        """
+        font = ImageFont.truetype(font_path, font_size)  # 加载字体
+        token_width = font.getlength(token)
+
+        ascent, descent = font.getmetrics()  # 获取字体基线上下高度
+        line_height = ascent + descent  # 计算理论行高
+
+        return token_width, line_height

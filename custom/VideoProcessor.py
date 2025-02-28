@@ -303,7 +303,7 @@ class VideoProcessor:
                 ass_path, font_dir = assProcessor.create_subtitle_ass(
                     subtitle_file=subtitle_file,
                     video_width=video_width,
-                    video_height=video_height,  # 新增视频高度参数
+                    video_height=video_height,
                     font_path=font,
                     font_size=font_size,
                     font_color=font_color,

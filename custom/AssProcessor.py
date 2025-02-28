@@ -196,7 +196,13 @@ class AssProcessor:
 
         ffmpeg_cmd = " ".join(cmd)  # 打印实际执行的命令（调试用）
         logging.info(f"执行的 FFmpeg 命令: {ffmpeg_cmd}")
-        subprocess.run(cmd, capture_output=True, text=True, check=True)
+        subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",  # 指定 UTF-8 编码
+            check=True
+        )
         logging.info(f"字幕已到烧录视频: {video_output}")
 
         return video_output

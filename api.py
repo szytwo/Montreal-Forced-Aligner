@@ -187,8 +187,6 @@ async def process_audio(
 ):
     """
     处理音频，生成带有字幕的视频。
-    返回：
-        ProcessAudioResponse: 包含处理结果的 JSON 响应。
     """
     response = ProcessAudioResponse
 

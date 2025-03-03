@@ -132,10 +132,16 @@ class TextProcessor:
         :param font_size: 字体大小
         :param token: 文本
         """
-        font = ImageFont.truetype(font_path, font_size)  # 加载字体
-        token_width = font.getlength(token)
 
-        ascent, descent = font.getmetrics()  # 获取字体基线上下高度
-        line_height = ascent + descent  # 计算理论行高
+        try:
+            font = ImageFont.truetype(font_path, font_size)  # 加载字体
+            token_width = font.getlength(token)
+
+            ascent, descent = font.getmetrics()  # 获取字体基线上下高度
+            line_height = ascent + descent  # 计算理论行高
+        except:
+            avg_char_width = font_size * 0.6  # 根据经验调整
+            token_width = len(token) * avg_char_width
+            line_height = font_size * 1.2  # 或其他经验值
 
         return token_width, line_height

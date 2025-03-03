@@ -10,11 +10,13 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware  # 引入 CORS中间件模块
 
 from custom.AsrProcessor import AsrProcessor
+from custom.AssProcessor import AssProcessor
 from custom.AudioProcessor import AudioProcessor
 from custom.MfaAlignProcessor import MfaAlignProcessor
 from custom.TextProcessor import TextProcessor
 from custom.VideoProcessor import VideoProcessor
 from custom.file_utils import logging, delete_old_files_and_folders
+from custom.model.ProcessAudioModel import ProcessAudioResponse
 from custom.model.ProcessTokModel import ProcessTokRequest, ProcessTokResponse
 
 # 需要安装ImageMagick并在环境变量中配置IMAGEMAGICK_BINARY的路径，或者运行时动态指定
@@ -77,8 +79,7 @@ async def test():
 
 
 @app.post("/process_tok/",
-          response_model=ProcessTokResponse,
-          response_description="分词处理结果",
+          response_model=ProcessTokResponse
           )
 async def process_tok(request: ProcessTokRequest):
     """
@@ -87,7 +88,7 @@ async def process_tok(request: ProcessTokRequest):
         ProcessTokResponse: 包含处理结果的 JSON 响应。
     """
     response = ProcessTokResponse
-    
+
     try:
         tokenizer = hanlp.load(hanlp.pretrained.tok.COARSE_ELECTRA_SMALL_ZH)
         if len(request.dict_force) > 0:
@@ -164,16 +165,30 @@ async def process_video(
         delete_old_files_and_folders(result_dir, 1)
 
 
-@app.post("/process_audio/")
+@app.post("/process_audio/",
+          response_model=ProcessAudioResponse
+          )
 async def process_audio(
         audio: UploadFile = File(..., description="上传的音频文件"),
-        prompt_text: str = Form(..., description="提供的文本提示，必填")
+        prompt_text: str = Form(..., description="提供的文本提示，必填"),
+        video_width: int = Form(default=0, description="视频宽度"),
+        video_height: int = Form(default=0, description="视频高度"),
+        font: str = Form(default='fonts/yahei.ttf', description="字体路径"),
+        font_size: int = Form(default=70, description="字体大小"),
+        font_color: str = Form(default='yellow', description="字体颜色"),
+        stroke_color: str = Form(default='yellow', description="描边颜色"),
+        stroke_width: int = Form(default=0, description="描边宽度"),
+        bottom: int = Form(default=10, description="字幕与视频底部的距离"),
+        opacity: int = Form(default=0, description="字幕透明度 (0-255)"),
+        isass: bool = Form(default=True, description="是否使用ass文件"),
 ):
     """
-    处理视频和音频，生成带有字幕的视频。
+    处理音频，生成带有字幕的视频。
     返回：
-        JSONResponse: 包含处理结果的 JSON 响应。
+        ProcessAudioResponse: 包含处理结果的 JSON 响应。
     """
+    response = ProcessAudioResponse
+
     try:
         prompt_text = TextProcessor.clear_text(prompt_text)
         # 初始化处理器
@@ -186,25 +201,64 @@ async def process_audio(
             nonsilent=False,
             reduce_noise_enabled=False
         )
+        language = TextProcessor.detect_language(prompt_text)
+
+        if language == 'ja' and not font.startswith("fonts/JA/"):
+            font = "fonts/JA/Noto_Sans_JP/static/NotoSansJP-Black.ttf"
+        elif language == 'ko' and not font.startswith("fonts/KO/"):
+            font = "fonts/KO/Noto_Sans_KR/static/NotoSansKR-Black.ttf"
+        min_line_length = 4
+        # 每行最大字符数
+        max_line_length = video_width / font_size - 2 if video_width > 0 and font_size > 0 else 40
         mfa_align_processor = MfaAlignProcessor()
         subtitle_path = mfa_align_processor.align_audio_with_text(
             audio_path=audio_file,
-            text=prompt_text
+            text=prompt_text,
+            min_line_length=min_line_length,
+            max_line_length=max_line_length,
+            language=language
         )
         # MFA失败，则使用ASR
         if not subtitle_path:
             asr_processor = AsrProcessor()
             subtitle_path = asr_processor.asr_to_srt(
-                audio_path=audio_file
+                audio_path=audio_file,
+                min_line_length=min_line_length,
+                max_line_length=max_line_length
             )
-        # 返回视频响应
-        return JSONResponse({"errcode": 0, "errmsg": "ok", "subtitle_path": subtitle_path})
+
+        if isass:
+            ass_processor = AssProcessor()
+            ass_path, font_dir = ass_processor.create_subtitle_ass(
+                subtitle_file=subtitle_path,
+                video_width=video_width,
+                video_height=video_height,
+                font_path=font,
+                font_size=font_size,
+                font_color=font_color,
+                stroke_color=stroke_color,
+                stroke_width=stroke_width,
+                bottom=bottom,
+                opacity=opacity
+            )
+        else:
+            ass_path = None
+            font_dir = None
+
+        response.errcode = 0
+        response.errmsg = "ok"
+        response.subtitle_path = subtitle_path
+        response.ass_path = ass_path
+        response.font_dir = font_dir
     except Exception as ex:
         TextProcessor.log_error(ex)
-        return JSONResponse({"errcode": -1, "errmsg": str(ex)})
+        response.errcode = -1
+        response.errmsg = str(ex)
     finally:
         # 删除过期文件
         delete_old_files_and_folders(result_dir, 1)
+
+    return response
 
 
 @app.get('/download')

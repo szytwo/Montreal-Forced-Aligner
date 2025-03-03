@@ -2,6 +2,8 @@ from typing import List
 
 from pydantic import BaseModel, Field
 
+from custom.model.APIBaseModel import ResponseBaseModel
+
 
 # 定义请求体模型
 class ProcessTokRequest(BaseModel):
@@ -24,15 +26,7 @@ class ProcessTokRequest(BaseModel):
 
 
 # 定义响应体模型
-class ProcessTokResponse(BaseModel):
-    errcode: int = Field(
-        default=0,
-        description="错误码，0 表示成功",
-    )
-    errmsg: str = Field(
-        default="ok",
-        description="错误信息，成功时为 'ok'",
-    )
+class ProcessTokResponse(ResponseBaseModel):
     tokens: List[str] = Field(
         default=[],
         description="分词后的结果列表",

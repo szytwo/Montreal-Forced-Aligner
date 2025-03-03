@@ -13,6 +13,9 @@ class ResponseBaseModel(BaseModel):
     )
 
     class Config:
+        schema_extra = {
+            "description": "响应结果"
+        }
         json_schema_extra = {
             "example": {
                 "errcode": 0,

@@ -5,7 +5,6 @@ from pydantic import BaseModel, Field
 from custom.model.APIBaseModel import ResponseBaseModel
 
 
-# 定义请求体模型
 class ProcessTokRequest(BaseModel):
     text: str = Field(
         ...,
@@ -17,6 +16,9 @@ class ProcessTokRequest(BaseModel):
     )
 
     class Config:
+        schema_extra = {
+            "description": "分词处理的请求体"
+        }
         json_schema_extra = {
             "example": {
                 "text": "欢迎使用我趣玩AI的数字人服务",
@@ -25,7 +27,6 @@ class ProcessTokRequest(BaseModel):
         }
 
 
-# 定义响应体模型
 class ProcessTokResponse(ResponseBaseModel):
     tokens: List[str] = Field(
         default=[],
@@ -33,6 +34,9 @@ class ProcessTokResponse(ResponseBaseModel):
     )
 
     class Config:
+        schema_extra = {
+            "description": "分词处理的响应结果"
+        }
         json_schema_extra = {
             "example": {
                 "errcode": 0,

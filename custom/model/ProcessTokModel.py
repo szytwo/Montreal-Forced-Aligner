@@ -16,10 +16,8 @@ class ProcessTokRequest(BaseModel):
     )
 
     class Config:
-        schema_extra = {
-            "description": "分词处理的请求体"
-        }
         json_schema_extra = {
+            "description": "分词处理的请求体",
             "example": {
                 "text": "欢迎使用我趣玩AI的数字人服务",
                 "dict_force": ["我趣玩", "我趣玩AI", "数字人"]
@@ -34,10 +32,8 @@ class ProcessTokResponse(ResponseBaseModel):
     )
 
     class Config:
-        schema_extra = {
-            "description": "分词处理的响应结果"
-        }
         json_schema_extra = {
+            "description": "分词处理的响应结果",
             "example": {
                 "errcode": 0,
                 "errmsg": "ok",

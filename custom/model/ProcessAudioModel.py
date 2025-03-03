@@ -18,10 +18,8 @@ class ProcessAudioResponse(ResponseBaseModel):
     )
 
     class Config:
-        schema_extra = {
-            "description": "字幕处理的响应结果"
-        }
         json_schema_extra = {
+            "description": "字幕处理的响应结果",
             "example": {
                 "errcode": 0,
                 "errmsg": "ok",

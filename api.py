@@ -1,8 +1,10 @@
 import argparse
 from pathlib import Path
+from typing import List
 
+import hanlp
 import uvicorn
-from fastapi import FastAPI, File, UploadFile, Form, Query
+from fastapi import FastAPI, File, UploadFile, Form, Query, Body
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import JSONResponse, PlainTextResponse, FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -72,6 +74,27 @@ async def test():
     测试接口，用于验证服务是否正常运行。
     """
     return PlainTextResponse('success')
+
+
+@app.post("/process_tok/")
+async def process_tok(
+        text: str = Body(..., description="需求分词的文本，必填"),
+        dict_force: List[str] = Body(
+            [],
+            description="强制自定义词条，例如：['我趣玩', '我趣玩AI', '数字人']"
+        ),
+):
+    """
+    处理中文分词。
+    返回：
+        JSONResponse: 包含处理结果的 JSON 响应。
+    """
+    tokenizer = hanlp.load(hanlp.pretrained.tok.COARSE_ELECTRA_SMALL_ZH)
+    if len(dict_force) > 0:
+        tokenizer.dict_force = dict_force
+    tokens = tokenizer(text)
+
+    return JSONResponse({"errcode": 0, "errmsg": "ok", "tokens": tokens})
 
 
 @app.post("/process_video/")

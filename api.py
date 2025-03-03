@@ -94,8 +94,6 @@ async def process_tok(request: ProcessTokRequest):
         if len(request.dict_force) > 0:
             tokenizer.dict_force = request.dict_force
         tokens = tokenizer(request.text)
-        response.errcode = 0
-        response.errmsg = "ok"
         response.tokens = tokens
     except Exception as ex:
         TextProcessor.log_error(ex)
@@ -243,8 +241,6 @@ async def process_audio(
             )
 
         response.subtitle_path = subtitle_path
-        response.errcode = 0
-        response.errmsg = "ok"
     except Exception as ex:
         TextProcessor.log_error(ex)
         response.errcode = -1

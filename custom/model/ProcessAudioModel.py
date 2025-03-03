@@ -1,18 +1,20 @@
+from typing import Optional
+
 from pydantic import Field
 
 from custom.model.APIBaseModel import ResponseBaseModel
 
 
 class ProcessAudioResponse(ResponseBaseModel):
-    subtitle_path: str = Field(
+    subtitle_path: Optional[str] = Field(
         default="",
         description="srt文件路径",
     )
-    ass_path: str = Field(
+    ass_path: Optional[str] = Field(
         default="",
         description="ass文件路径",
     )
-    font_dir: str = Field(
+    font_dir: Optional[str] = Field(
         default="",
         description="字体文件目录",
     )

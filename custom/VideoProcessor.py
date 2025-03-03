@@ -271,7 +271,9 @@ class VideoProcessor:
             font = "fonts/JA/Noto_Sans_JP/static/NotoSansJP-Black.ttf"
         elif language == 'ko' and not font.startswith("fonts/KO/"):
             font = "fonts/KO/Noto_Sans_KR/static/NotoSansKR-Black.ttf"
-
+        ass_path = ""
+        font_dir = ""
+        
         try:
             video_file, fps = VideoProcessor.convert_video_fps(video_file, fps)
             video_clip = VideoFileClip(video_file)
@@ -386,7 +388,7 @@ class VideoProcessor:
             if video_clip:
                 video_clip.close()
 
-        return output_video, subtitle_file
+        return output_video, subtitle_file, ass_path, font_dir
 
     @staticmethod
     def get_media_metadata(media_path):

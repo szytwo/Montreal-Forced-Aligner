@@ -5,7 +5,7 @@ import hanlp
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, Form, Query
 from fastapi.openapi.docs import get_swagger_ui_html
-from fastapi.responses import JSONResponse, PlainTextResponse, FileResponse, HTMLResponse
+from fastapi.responses import PlainTextResponse, FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware  # 引入 CORS中间件模块
 
@@ -18,6 +18,7 @@ from custom.VideoProcessor import VideoProcessor
 from custom.file_utils import logging, delete_old_files_and_folders
 from custom.model.ProcessAudioModel import ProcessAudioResponse
 from custom.model.ProcessTokModel import ProcessTokRequest, ProcessTokResponse
+from custom.model.ProcessVideoModel import ProcessVideoResponse
 
 # 需要安装ImageMagick并在环境变量中配置IMAGEMAGICK_BINARY的路径，或者运行时动态指定
 # https://imagemagick.org/script/download.php
@@ -84,8 +85,6 @@ async def test():
 async def process_tok(request: ProcessTokRequest):
     """
     处理中文分词。
-    返回：
-        ProcessTokResponse: 包含处理结果的 JSON 响应。
     """
     response = ProcessTokResponse
 
@@ -97,13 +96,15 @@ async def process_tok(request: ProcessTokRequest):
         response.tokens = tokens
     except Exception as ex:
         TextProcessor.log_error(ex)
-        response.errcode = 500
+        response.errcode = -1
         response.errmsg = f"处理失败：{str(ex)}"
 
     return response
 
 
-@app.post("/process_video/")
+@app.post("/process_video/",
+          response_model=ProcessVideoResponse
+          )
 async def process_video(
         video: UploadFile = File(..., description="上传的视频文件"),
         prompt_text: str = Form(..., description="提供的文本提示，必填"),
@@ -120,9 +121,8 @@ async def process_video(
 ):
     """
     处理视频和音频，生成带有字幕的视频。
-    返回：
-        JSONResponse: 包含处理结果的 JSON 响应。
     """
+    response = ProcessVideoResponse
 
     try:
         prompt_text = TextProcessor.clear_text(prompt_text)
@@ -139,7 +139,10 @@ async def process_video(
                 upload_file=srt
             )
 
-        video_path, subtitle_path = video_processor.video_subtitle(
+        (response.video_path,
+         response.subtitle_path,
+         response.ass_path,
+         response.font_dir) = video_processor.video_subtitle(
             video_file=video_upload,
             prompt_text=prompt_text,
             subtitle_file=subtitle_file,
@@ -154,13 +157,15 @@ async def process_video(
             isass=isass
         )
         # 返回视频响应
-        return JSONResponse({"errcode": 0, "errmsg": "ok", "video_path": video_path, "subtitle_path": subtitle_path})
     except Exception as ex:
         TextProcessor.log_error(ex)
-        return JSONResponse({"errcode": -1, "errmsg": str(ex)})
+        response.errcode = -1
+        response.errmsg = str(ex)
     finally:
         # 删除过期文件
         delete_old_files_and_folders(result_dir, 1)
+
+    return response
 
 
 @app.post("/process_audio/",

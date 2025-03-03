@@ -79,9 +79,10 @@ async def test():
     return PlainTextResponse('success')
 
 
-@app.post("/process_tok/",
-          response_model=ProcessTokResponse
-          )
+@app.post(
+    "/process_tok/",
+    response_model=ProcessTokResponse
+)
 async def process_tok(request: ProcessTokRequest):
     """
     处理中文分词。
@@ -102,9 +103,10 @@ async def process_tok(request: ProcessTokRequest):
     return response
 
 
-@app.post("/process_video/",
-          response_model=ProcessVideoResponse
-          )
+@app.post(
+    "/process_video/",
+    response_model=ProcessVideoResponse
+)
 async def process_video(
         video: UploadFile = File(..., description="上传的视频文件"),
         prompt_text: str = Form(..., description="提供的文本提示，必填"),
@@ -168,9 +170,10 @@ async def process_video(
     return response
 
 
-@app.post("/process_audio/",
-          response_model=ProcessAudioResponse
-          )
+@app.post(
+    "/process_audio/",
+    response_model=ProcessAudioResponse
+)
 async def process_audio(
         audio: UploadFile = File(..., description="上传的音频文件"),
         prompt_text: str = Form(..., description="提供的文本提示，必填"),

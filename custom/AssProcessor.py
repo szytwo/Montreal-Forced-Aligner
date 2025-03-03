@@ -67,11 +67,7 @@ class AssProcessor:
         if not os.path.exists(subtitle_file):
             raise FileNotFoundError(f"字幕文件不存在: {subtitle_file}")
         # 提取字体名称
-        try:
-            font_name = TextProcessor.get_font_name(font_path)
-        except Exception as e:
-            TextProcessor.log_error(e)
-            font_name = "Arial"  # 回退默认字体
+        font_name = TextProcessor.get_font_name(font_path)
         # 自动从字体路径提取字体目录
         font_dir = os.path.dirname(os.path.abspath(font_path))
         # 生成 ASS 文件路径

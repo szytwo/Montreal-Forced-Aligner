@@ -121,7 +121,9 @@ class TextProcessor:
                     return entry.toUnicode()
             return os.path.splitext(os.path.basename(font_path))[0]
         except Exception as e:
-            raise ValueError(f"字体解析失败: {font_path} - {str(e)}")
+            TextProcessor.log_error(e)
+            logging.error(f"{font_path} 提取字体名称异常，使用默认字体 Arial")
+            return "Arial"  # 回退默认字体
 
     @staticmethod
     def get_font_size(font_path, font_size, token):
@@ -139,7 +141,9 @@ class TextProcessor:
 
             ascent, descent = font.getmetrics()  # 获取字体基线上下高度
             line_height = ascent + descent  # 计算理论行高
-        except:
+        except Exception as e:
+            TextProcessor.log_error(e)
+            logging.error(f"{font_path} 获取精确字体参数异常，使用估算")
             avg_char_width = font_size * 0.6  # 根据经验调整
             token_width = len(token) * avg_char_width
             line_height = font_size * 1.2  # 或其他经验值

@@ -79,45 +79,29 @@ async def test():
 @app.post("/process_tok/",
           response_model=ProcessTokResponse,
           response_description="分词处理结果",
-          responses={
-              200: {
-                  "description": "成功返回分词结果",
-                  "content": {
-                      "application/json": {
-                          "example": {
-                              "errcode": 0,
-                              "errmsg": "ok",
-                              "tokens": ["我趣玩AI", "平台"]
-                          }
-                      }
-                  }
-              }
-          })
+          )
 async def process_tok(request: ProcessTokRequest):
     """
     处理中文分词。
     返回：
-        JSONResponse: 包含处理结果的 JSON 响应。
+        ProcessTokResponse: 包含处理结果的 JSON 响应。
     """
-
+    response = ProcessTokResponse
+    
     try:
         tokenizer = hanlp.load(hanlp.pretrained.tok.COARSE_ELECTRA_SMALL_ZH)
         if len(request.dict_force) > 0:
             tokenizer.dict_force = request.dict_force
         tokens = tokenizer(request.text)
-
-        return {
-            "errcode": 0,
-            "errmsg": "ok",
-            "tokens": tokens
-        }
+        response.errcode = 0
+        response.errmsg = "ok"
+        response.tokens = tokens
     except Exception as ex:
         TextProcessor.log_error(ex)
-        return {
-            "errcode": 500,
-            "errmsg": f"处理失败：{str(ex)}",
-            "tokens": []
-        }
+        response.errcode = 500
+        response.errmsg = f"处理失败：{str(ex)}"
+
+    return response
 
 
 @app.post("/process_video/")

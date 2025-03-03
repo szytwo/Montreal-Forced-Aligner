@@ -9,7 +9,7 @@ from custom.model.APIBaseModel import ResponseBaseModel
 class ProcessTokRequest(BaseModel):
     text: str = Field(
         ...,
-        description="提供的文本提示，必填",
+        description="需要分词的文本，必填",
     )
     dict_force: List[str] = Field(
         default=[],

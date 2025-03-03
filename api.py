@@ -229,7 +229,7 @@ async def process_audio(
 
         if isass:
             ass_processor = AssProcessor()
-            ass_path, font_dir = ass_processor.create_subtitle_ass(
+            response.ass_path, response.font_dir = ass_processor.create_subtitle_ass(
                 subtitle_file=subtitle_path,
                 video_width=video_width,
                 video_height=video_height,
@@ -241,15 +241,10 @@ async def process_audio(
                 bottom=bottom,
                 opacity=opacity
             )
-        else:
-            ass_path = None
-            font_dir = None
 
+        response.subtitle_path = subtitle_path
         response.errcode = 0
         response.errmsg = "ok"
-        response.subtitle_path = subtitle_path
-        response.ass_path = ass_path
-        response.font_dir = font_dir
     except Exception as ex:
         TextProcessor.log_error(ex)
         response.errcode = -1

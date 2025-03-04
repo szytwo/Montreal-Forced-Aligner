@@ -281,7 +281,7 @@ class VideoProcessor:
             video_height = video_clip.h  # 获取视频高度
             # 如果没有提供字幕文件，使用 MFA 对齐生成
             if not subtitle_file and prompt_text:
-                maxsize = video_width * 0.9 // font_size  # 每行最大字符数
+                maxsize = TextProcessor.calc_line_maxsize(video_width, font_size, language)  # 每行最大字符数
 
                 mfa_align_processor = MfaAlignProcessor()
                 subtitle_file = mfa_align_processor.align_audio_with_text(

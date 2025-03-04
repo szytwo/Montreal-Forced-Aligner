@@ -149,3 +149,21 @@ class TextProcessor:
             line_height = font_size * 1.2  # 或其他经验值
 
         return token_width, line_height
+
+    @staticmethod
+    def calc_line_maxsize(video_width, font_size, language):
+        """
+        估算每行最大字符数
+        :param video_width: 视频宽度（像素）
+        :param font_size: 字体大小（像素）
+        :param language: 语言类型
+        :return: 每行最大字符数
+        """
+        if language == 'en':
+            # 英文字符：宽度为 font_size * 0.5
+            maxsize = int(video_width * 0.9 // (font_size * 0.5))
+        else:
+            # 中文字符：等宽，宽度为 font_size
+            maxsize = int(video_width * 0.9 // font_size)
+
+        return maxsize

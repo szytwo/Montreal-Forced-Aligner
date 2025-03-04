@@ -166,4 +166,5 @@ class TextProcessor:
             # 中文字符：等宽，宽度为 font_size
             maxsize = int(video_width * 0.9 // font_size)
 
+        logging.info(f"calc_line_maxsize: {maxsize}")
         return maxsize

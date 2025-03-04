@@ -213,7 +213,7 @@ async def process_audio(
             font = "fonts/KO/Noto_Sans_KR/static/NotoSansKR-Black.ttf"
         min_line_length = 4
         # 每行最大字符数
-        max_line_length = video_width / font_size - 2 if video_width > 0 and font_size > 0 else 40
+        max_line_length = video_width * 0.9 // font_size if video_width > 0 and font_size > 0 else 40
         mfa_align_processor = MfaAlignProcessor()
         subtitle_path = mfa_align_processor.align_audio_with_text(
             audio_path=audio_file,

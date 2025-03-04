@@ -273,7 +273,7 @@ class VideoProcessor:
             font = "fonts/KO/Noto_Sans_KR/static/NotoSansKR-Black.ttf"
         ass_path = ""
         font_dir = ""
-        
+
         try:
             video_file, fps = VideoProcessor.convert_video_fps(video_file, fps)
             video_clip = VideoFileClip(video_file)
@@ -281,7 +281,7 @@ class VideoProcessor:
             video_height = video_clip.h  # 获取视频高度
             # 如果没有提供字幕文件，使用 MFA 对齐生成
             if not subtitle_file and prompt_text:
-                maxsize = video_width / font_size - 2  # 每行最大字符数
+                maxsize = video_width * 0.9 // font_size  # 每行最大字符数
 
                 mfa_align_processor = MfaAlignProcessor()
                 subtitle_file = mfa_align_processor.align_audio_with_text(

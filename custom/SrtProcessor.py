@@ -61,17 +61,26 @@ class SrtProcessor:
         start_time = None
         end_time = None
 
+        is_single_letter = False  # 单字母
+
         for interval in tier.intervals:
             word = interval.mark.strip()
             word = SrtProcessor.remove_punctuation(word)  # 移除标点符号
             if start_time is None:
                 start_time = interval.minTime
             end_time = interval.maxTime
-            is_single_letter = False  # 单字母，不分行
+            allow_line = True  # 允许分行
 
             if word:
                 is_en = SrtProcessor.is_english(word)
+
+                if is_single_letter:  # 如果上一个是单字母，这次不分行
+                    allow_line = False
+
                 is_single_letter = is_en and len(word) == 1
+
+                if is_single_letter:  # 如果是单字母，不分行
+                    allow_line = False
                 # 判断是中文还是英文并处理
                 if is_en and len(word) >= 2 and current_length > 0:
                     if (language == 'zh' or language == 'zh-cn') and word.lower() in exceptions:  # 判断单词是否在例外列表中
@@ -82,7 +91,7 @@ class SrtProcessor:
                 current_subtitle.append(word)
                 current_length += len(word)
             # 如果无文字或长度超出限制，则分行
-            if (not is_single_letter
+            if (allow_line
                     and ((not word
                           and interval.maxTime - interval.minTime > 0.15
                           and current_length >= min_line_length

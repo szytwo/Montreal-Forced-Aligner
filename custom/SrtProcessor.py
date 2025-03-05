@@ -74,7 +74,7 @@ class SrtProcessor:
                 is_single_letter = is_en and len(word) == 1
                 # 判断是中文还是英文并处理
                 if is_en and len(word) >= 2 and current_length > 0:
-                    if language == 'zh-cn' and word.lower() in exceptions:  # 判断单词是否在例外列表中
+                    if (language == 'zh' or language == 'zh-cn') and word.lower() in exceptions:  # 判断单词是否在例外列表中
                         word = word
                     else:
                         word = ' ' + word  # 英文单词前加空格
@@ -105,7 +105,7 @@ class SrtProcessor:
         with open(output_srt_path, 'w', encoding='utf-8') as f:
             for subtitle in subtitles:
                 subtitle_id, start_time, end_time, text = subtitle
-                if language == 'zh-cn':
+                if language == 'zh' or language == 'zh-cn':
                     # 转换为简体中文
                     text = convert(text, 'zh-cn')
                 # 使用格式化函数

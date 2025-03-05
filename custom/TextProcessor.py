@@ -68,7 +68,7 @@ class TextProcessor:
             return text
         # 根据文本内容添加适当的句号
         lang = TextProcessor.detect_language(text)
-        if lang == 'zh-cn':  # 中文文本
+        if lang == 'zh' or lang == 'zh-cn':  # 中文文本
             return text + '。'
         else:  # 英文或其他
             return text + '.'

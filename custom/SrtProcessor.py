@@ -69,13 +69,14 @@ class SrtProcessor:
             if start_time is None:
                 start_time = interval.minTime
             end_time = interval.maxTime
-            allow_line = True  # 允许分行
+
+            if is_single_letter:  # 如果上一个是单字母，这次不分行
+                allow_line = False
+            else:
+                allow_line = True  # 允许分行
 
             if word:
                 is_en = SrtProcessor.is_english(word)
-
-                if is_single_letter:  # 如果上一个是单字母，这次不分行
-                    allow_line = False
 
                 is_single_letter = is_en and len(word) == 1
 

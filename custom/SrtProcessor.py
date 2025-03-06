@@ -38,6 +38,7 @@ class SrtProcessor:
         punctuation_pattern = r'[，。！？；：、“”‘’（）《》【】,.!?;:"\'()<>[\]{}▁]'
         return re.sub(punctuation_pattern, '', text)
 
+    # noinspection PyTypeChecker
     @staticmethod
     def textgrid_to_srt(textgrid_path, output_srt_path, min_line_len=0, max_line_len=40, language='auto'):
         """
@@ -53,19 +54,27 @@ class SrtProcessor:
         exceptions = keywords["exceptions"]  # 获取例外单词列表
         tg = TextGrid.fromFile(textgrid_path)
         tier = tg[0]  # 假设对齐文本在第一个层级
-
+        # 预扫描所有间隔，找到最后一个有实际内容的间隔的索引
+        content_indices = []
+        for idx, interval in enumerate(tier.intervals):
+            word = interval.mark.strip()
+            word = SrtProcessor.remove_punctuation(word)  # 保持处理一致性
+            if word:  # 记录所有有实际内容的间隔索引
+                content_indices.append(idx)
+        # 最后一个内容索引
+        last_content_index = content_indices[-1] if content_indices else -1
         subtitles = []
         subtitle_id = 1
         current_subtitle = []
         current_length = 0  # 当前字幕的总字符长度
         start_time = None
         end_time = None
-
         is_single_letter = False  # 单字母
 
-        for interval in tier.intervals:
+        for index, interval in enumerate(tier.intervals):
             word = interval.mark.strip()
             word = SrtProcessor.remove_punctuation(word)  # 移除标点符号
+            is_last_content = (index == last_content_index)  # 是否最后一个有效内容
             if start_time is None:
                 start_time = interval.minTime
             end_time = interval.maxTime
@@ -77,14 +86,14 @@ class SrtProcessor:
 
             if word:
                 is_en = SrtProcessor.is_english(word)
-
                 is_single_letter = is_en and len(word) == 1
-
-                if is_single_letter:  # 如果是单字母，不分行
+                # 如果是单字母，不分行
+                if is_single_letter:
                     allow_line = False
                 # 判断是中文还是英文并处理
                 if is_en and len(word) >= 2 and current_length > 0:
-                    if (language == 'zh' or language == 'zh-cn') and word.lower() in exceptions:  # 判断单词是否在例外列表中
+                    # 判断单词是否在例外列表中
+                    if (language == 'zh' or language == 'zh-cn') and word.lower() in exceptions:
                         word = word
                     else:
                         word = ' ' + word  # 英文单词前加空格
@@ -93,6 +102,7 @@ class SrtProcessor:
                 current_length += len(word)
             # 如果无文字或长度超出限制，则分行
             if (allow_line
+                    and not is_last_content
                     and ((not word
                           and interval.maxTime - interval.minTime > 0.15
                           and current_length >= min_line_len

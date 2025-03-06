@@ -39,14 +39,14 @@ class SrtProcessor:
         return re.sub(punctuation_pattern, '', text)
 
     @staticmethod
-    def textgrid_to_srt(textgrid_path, output_srt_path, min_line_length=0, max_line_length=40, language='auto'):
+    def textgrid_to_srt(textgrid_path, output_srt_path, min_line_len=0, max_line_len=40, language='auto'):
         """
         将 TextGrid 文件转换为 SRT 字幕文件
 
         :param textgrid_path: 输入的 TextGrid 文件路径
         :param output_srt_path: 输出的 SRT 文件路径
-        :param min_line_length: 行最小长度
-        :param max_line_length: 行最大长度
+        :param min_line_len: 行最小长度
+        :param max_line_len: 行最大长度
         :param language: 语言代码
         """
         keywords = TextProcessor.get_keywords()
@@ -95,9 +95,9 @@ class SrtProcessor:
             if (allow_line
                     and ((not word
                           and interval.maxTime - interval.minTime > 0.15
-                          and current_length >= min_line_length
+                          and current_length >= min_line_len
                          )
-                         or current_length >= max_line_length
+                         or current_length >= max_line_len
                     )
             ):
                 if current_subtitle:  # 确保当前字幕行非空

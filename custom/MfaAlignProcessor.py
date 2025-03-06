@@ -17,13 +17,13 @@ class MfaAlignProcessor:
         """
         self.model_dir = model_dir
 
-    def align_audio_with_text(self, audio_path, text, min_line_length=0, max_line_length=40, language=None):
+    def align_audio_with_text(self, audio_path, text, min_line_len=0, max_line_len=40, language=None):
         """
         使用 MFA 进行音频与文本对齐
         :param audio_path: 包含音频文件的路径
         :param text: 文本
-        :param min_line_length: 行最小长度
-        :param max_line_length: 行最大长度
+        :param min_line_len: 行最小长度
+        :param max_line_len: 行最大长度
         :param language: 语言
         """
         if not language:
@@ -92,8 +92,8 @@ class MfaAlignProcessor:
             SrtProcessor.textgrid_to_srt(
                 textgrid_path=textgrid_file,
                 output_srt_path=srt_file,
-                min_line_length=min_line_length,
-                max_line_length=max_line_length,
+                min_line_len=min_line_len,
+                max_line_len=max_line_len,
                 language=language
             )
 

@@ -151,7 +151,7 @@ class TextProcessor:
         return token_width, line_height
 
     @staticmethod
-    def calc_line_maxsize(video_width, font_size, language):
+    def calc_max_line_len(video_width, font_size, language):
         """
         估算每行最大字符数
         :param video_width: 视频宽度（像素）
@@ -161,10 +161,10 @@ class TextProcessor:
         """
         if language == 'en':
             # 英文字符：宽度为 font_size * 0.5
-            maxsize = int(video_width * 0.9 // (font_size * 0.5))
+            max_line_len = int(video_width * 0.9 // (font_size * 0.5))
         else:
             # 中文字符：等宽，宽度为 font_size
-            maxsize = int(video_width * 0.9 // font_size)
+            max_line_len = int(video_width * 0.9 // font_size)
 
-        logging.info(f"calc_line_maxsize: {maxsize}")
-        return maxsize
+        logging.info(f"max_line_len: {max_line_len}")
+        return max_line_len

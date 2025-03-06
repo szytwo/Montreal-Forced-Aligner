@@ -281,14 +281,16 @@ class VideoProcessor:
             video_height = video_clip.h  # 获取视频高度
             # 如果没有提供字幕文件，使用 MFA 对齐生成
             if not subtitle_file and prompt_text:
-                maxsize = TextProcessor.calc_line_maxsize(video_width, font_size, language)  # 每行最大字符数
+                max_line_len = TextProcessor.calc_max_line_len(video_width, font_size, language)  # 每行最大字符数
+
+                min_line_len = 12 if language == 'en' else 4
 
                 mfa_align_processor = MfaAlignProcessor()
                 subtitle_file = mfa_align_processor.align_audio_with_text(
                     audio_path=audio_file,
                     text=prompt_text,
-                    min_line_length=4,
-                    max_line_length=maxsize,
+                    min_line_len=min_line_len,
+                    max_line_len=max_line_len,
                     language=language
                 )
                 # MFA失败，则使用ASR
@@ -296,8 +298,8 @@ class VideoProcessor:
                     asr_processor = AsrProcessor()
                     subtitle_file = asr_processor.asr_to_srt(
                         audio_path=audio_file,
-                        min_line_length=4,
-                        max_line_length=maxsize,
+                        min_line_len=min_line_len,
+                        max_line_len=max_line_len,
                     )
 
             if isass:

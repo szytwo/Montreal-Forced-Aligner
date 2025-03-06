@@ -211,18 +211,18 @@ async def process_audio(
             font = "fonts/JA/Noto_Sans_JP/static/NotoSansJP-Black.ttf"
         elif language == 'ko' and not font.startswith("fonts/KO/"):
             font = "fonts/KO/Noto_Sans_KR/static/NotoSansKR-Black.ttf"
-        min_line_length = 4
+        min_line_len = 12 if language == 'en' else 4
         # 每行最大字符数
-        max_line_length = 40
+        max_line_len = 40
         if video_width > 0 and font_size > 0:
-            max_line_length = TextProcessor.calc_line_maxsize(video_width, font_size, language)
+            max_line_len = TextProcessor.calc_max_line_len(video_width, font_size, language)
 
         mfa_align_processor = MfaAlignProcessor()
         subtitle_path = mfa_align_processor.align_audio_with_text(
             audio_path=audio_file,
             text=prompt_text,
-            min_line_length=min_line_length,
-            max_line_length=max_line_length,
+            min_line_len=min_line_len,
+            max_line_len=max_line_len,
             language=language
         )
         # MFA失败，则使用ASR
@@ -230,8 +230,8 @@ async def process_audio(
             asr_processor = AsrProcessor()
             subtitle_path = asr_processor.asr_to_srt(
                 audio_path=audio_file,
-                min_line_length=min_line_length,
-                max_line_length=max_line_length
+                min_line_len=min_line_len,
+                max_line_len=max_line_len
             )
 
         if isass:

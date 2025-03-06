@@ -64,7 +64,7 @@ class AsrProcessor:
 
         logging.info(f"TextGrid file saved to {output}")
 
-    def asr_to_srt(self, audio_path, min_line_length=0, max_line_length=40):
+    def asr_to_srt(self, audio_path, min_line_len=0, max_line_len=40):
         try:
             logging.info(f"正在使用 ASR 进行音频与文本对齐...")
             # 构建保存路径
@@ -87,8 +87,8 @@ class AsrProcessor:
                 SrtProcessor.textgrid_to_srt(
                     textgrid_path=textgrid_file,
                     output_srt_path=srt_file,
-                    min_line_length=min_line_length,
-                    max_line_length=max_line_length,
+                    min_line_len=min_line_len,
+                    max_line_len=max_line_len,
                     language=language
                 )
 

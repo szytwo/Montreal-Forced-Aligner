@@ -61,8 +61,9 @@ class SrtProcessor:
             word = SrtProcessor.remove_punctuation(word)  # 保持处理一致性
             if word:  # 记录所有有实际内容的间隔索引
                 content_indices.append(idx)
-        # 最后一个内容索引
-        last_content_index = content_indices[-1] if content_indices else -1
+        last_content_index = -1
+        if content_indices and len(content_indices) >= 2:
+            last_content_index = content_indices[-2]  # 取倒数第二个元素
         subtitles = []
         subtitle_id = 1
         current_subtitle = []
@@ -74,7 +75,7 @@ class SrtProcessor:
         for index, interval in enumerate(tier.intervals):
             word = interval.mark.strip()
             word = SrtProcessor.remove_punctuation(word)  # 移除标点符号
-            is_last_content = (index == last_content_index)  # 是否最后一个有效内容
+            is_last_content = (index == last_content_index)  # 是否倒数第二个有效内容
             if start_time is None:
                 start_time = interval.minTime
             end_time = interval.maxTime

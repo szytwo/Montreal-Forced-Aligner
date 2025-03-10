@@ -84,21 +84,16 @@ class AsrProcessor:
                 AsrProcessor.generate_textgrid(timestamp_data, textgrid_file)
                 # 将 TextGrid 文件转换为 SRT 文件
                 srt_file = os.path.join(audio_dir, f"{audio_name}.srt")
+                json_file = os.path.join(audio_dir, f"{audio_name}.json")
                 SrtProcessor.textgrid_to_srt(
                     textgrid_path=textgrid_file,
                     output_srt_path=srt_file,
+                    output_json_path=json_file,
                     min_line_len=min_line_len,
                     max_line_len=max_line_len,
                     language=language
                 )
 
-                # 将 TextGrid 文件转换为 json 文件
-                json_file = os.path.join(audio_dir, f"{audio_name}.json")
-                SrtProcessor.textgrid_to_json(
-                    textgrid_path=textgrid_file,
-                    output_json_path=json_file,
-                    language=language
-                )
                 logging.info("ASR 音频与文本对齐完成!")
 
                 return srt_file, json_file

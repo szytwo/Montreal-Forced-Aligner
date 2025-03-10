@@ -41,12 +41,14 @@ class SrtProcessor:
 
     # noinspection PyTypeChecker
     @staticmethod
-    def textgrid_to_srt(textgrid_path, output_srt_path, min_line_len=0, max_line_len=40, language='auto'):
+    def textgrid_to_srt(textgrid_path, output_srt_path, output_json_path, min_line_len=0, max_line_len=40,
+                        language='auto'):
         """
         将 TextGrid 文件转换为 SRT 字幕文件
 
         :param textgrid_path: 输入的 TextGrid 文件路径
         :param output_srt_path: 输出的 SRT 文件路径
+        :param output_json_path: 输出的 JSON 文件路径
         :param min_line_len: 行最小长度
         :param max_line_len: 行最大长度
         :param language: 语言代码
@@ -68,6 +70,7 @@ class SrtProcessor:
         subtitles = []
         subtitle_id = 1
         current_subtitle = []
+        current_word_list = []
         current_length = 0  # 当前字幕的总字符长度
         start_time = None
         end_time = None
@@ -88,7 +91,12 @@ class SrtProcessor:
 
             if word:
                 is_en = SrtProcessor.is_english(word)
+                if not is_en and (language == 'zh' or language == 'zh-cn'):
+                    # 转换为简体中文
+                    word = convert(word, 'zh-cn')
                 is_single_letter = is_en and len(word) == 1
+                # 记录当前单词及其时间
+                current_word_list.append((word, interval.minTime, interval.maxTime))
                 # 如果是单字母，不分行
                 if is_single_letter:
                     allow_line = False
@@ -114,22 +122,21 @@ class SrtProcessor:
             ):
                 if current_subtitle:  # 确保当前字幕行非空
                     subtitle_text = ''.join(current_subtitle)
-                    subtitles.append((subtitle_id, start_time, end_time, subtitle_text))
+                    subtitles.append((subtitle_id, start_time, end_time, subtitle_text, current_word_list))
                     subtitle_id += 1
-                    current_subtitle = []  # 重置当前字幕行
+                    # 重置当前字幕数据
+                    current_subtitle = []
+                    current_word_list = []
                     current_length = 0
                     start_time = None
         # 处理最后一个字幕条目
         if current_subtitle:
             subtitle_text = ''.join(current_subtitle)
-            subtitles.append((subtitle_id, start_time, end_time, subtitle_text))
+            subtitles.append((subtitle_id, start_time, end_time, subtitle_text, current_word_list))
         # 写入 SRT 文件
         with open(output_srt_path, 'w', encoding='utf-8') as f:
             for subtitle in subtitles:
                 subtitle_id, start_time, end_time, text = subtitle
-                if language == 'zh' or language == 'zh-cn':
-                    # 转换为简体中文
-                    text = convert(text, 'zh-cn')
                 # 使用格式化函数
                 start_time_str = SrtProcessor.format_time(start_time)
                 end_time_str = SrtProcessor.format_time(end_time)
@@ -138,6 +145,28 @@ class SrtProcessor:
                 f.write(f"{text}\n\n")
 
         logging.info(f"SRT file saved to {output_srt_path}")
+        # 生成 JSON 数据，每个字幕条目包含 id, 时间（字符串格式）、字幕文本及 word 列
+        json_data = []
+        for subtitle in subtitles:
+            subtitle_id, start_time, end_time, text, word_list = subtitle
+            json_data.append({
+                "subtitle_id": subtitle_id,
+                "start_time": SrtProcessor.format_time(start_time),
+                "end_time": SrtProcessor.format_time(end_time),
+                "text": text,
+                "word_list": [
+                    {
+                        "word": word,
+                        "start_time": SrtProcessor.format_time(word_start),
+                        "end_time": SrtProcessor.format_time(word_end)
+                    }
+                    for word, word_start, word_end in word_list
+                ]
+            })
+        # 写入 JSON 文件
+        with open(output_json_path, 'w', encoding='utf-8') as jf:
+            json.dump(json_data, jf, ensure_ascii=False, indent=4)
+        logging.info(f"JSON file saved to {output_json_path}")
 
     # noinspection PyTypeChecker
     @staticmethod

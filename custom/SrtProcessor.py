@@ -136,7 +136,7 @@ class SrtProcessor:
         # 写入 SRT 文件
         with open(output_srt_path, 'w', encoding='utf-8') as f:
             for subtitle in subtitles:
-                subtitle_id, start_time, end_time, text = subtitle
+                subtitle_id, start_time, end_time, text, _ = subtitle
                 # 使用格式化函数
                 start_time_str = SrtProcessor.format_time(start_time)
                 end_time_str = SrtProcessor.format_time(end_time)

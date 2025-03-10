@@ -174,7 +174,7 @@ class AssProcessor:
         ]
 
         ffmpeg_cmd = " ".join(cmd)  # 打印实际执行的命令（调试用）
-        logging.info(f"FFmpeg cmd: {ffmpeg_cmd}")
+        logging.info(f"cmd: {ffmpeg_cmd}")
         subprocess.run(
             cmd,
             capture_output=True,

@@ -144,7 +144,7 @@ class SrtProcessor:
                 f.write(f"{start_time_str} --> {end_time_str}\n")
                 f.write(f"{text}\n\n")
 
-        logging.info(f"SRT file saved to {output_srt_path}")
+        logging.info(f"SRT file saved: {output_srt_path}")
         # 生成 JSON 数据，每个字幕条目包含 id, 时间（字符串格式）、字幕文本及 word 列
         json_data = []
         for subtitle in subtitles:
@@ -166,7 +166,7 @@ class SrtProcessor:
         # 写入 JSON 文件
         with open(output_json_path, 'w', encoding='utf-8') as jf:
             json.dump(json_data, jf, ensure_ascii=False, indent=4)
-        logging.info(f"JSON file saved to {output_json_path}")
+        logging.info(f"JSON file saved: {output_json_path}")
 
     # noinspection PyTypeChecker
     @staticmethod

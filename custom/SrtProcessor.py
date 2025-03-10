@@ -180,8 +180,8 @@ class SrtProcessor:
         """
         tg = TextGrid.fromFile(textgrid_path)
         tier = tg[0]  # 假设对齐文本在第一个层级
-        subtitles = []
-        subtitle_id = 1
+        words = []
+        word_id = 1
         for idx, interval in enumerate(tier.intervals):
             word = interval.mark.strip()
             word = SrtProcessor.remove_punctuation(word)
@@ -191,15 +191,15 @@ class SrtProcessor:
                 if language == 'zh' or language == 'zh-cn':
                     # 转换为简体中文
                     word = convert(word, 'zh-cn')
-                subtitles.append({
-                    "id": subtitle_id,
-                    "start": SrtProcessor.format_time(start_time),
-                    "end": SrtProcessor.format_time(end_time),
-                    "text": word
+                words.append({
+                    "word_id": word_id,
+                    "start_time": SrtProcessor.format_time(start_time),
+                    "end_time": SrtProcessor.format_time(end_time),
+                    "word": word
                 })
-                subtitle_id += 1
+                word_id += 1
         # 写入JSON文件
         with open(output_json_path, 'w', encoding='utf-8') as f:
-            json.dump(subtitles, f, ensure_ascii=False, indent=2)
+            json.dump(words, f, ensure_ascii=False, indent=2)
 
         logging.info(f"JSON file saved to {output_json_path}")

@@ -69,12 +69,12 @@ class SrtProcessor:
             last_content_index = content_indices[-2]  # 取倒数第二个元素
         subtitles = []
         subtitle_id = 1
-        current_subtitle = []
-        current_word_list = []
+        current_subtitle = []  # 用于拼接字幕文本
+        current_word_list = []  # 用于记录该字幕内所有单词及其时间，格式：(word, minTime, maxTime)
         current_length = 0  # 当前字幕的总字符长度
         start_time = None
         end_time = None
-        is_single_letter = False  # 单字母
+        is_single_letter = False  # 是否为单字母
 
         for index, interval in enumerate(tier.intervals):
             word = interval.mark.strip()

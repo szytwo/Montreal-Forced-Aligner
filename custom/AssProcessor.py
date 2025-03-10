@@ -130,7 +130,7 @@ class AssProcessor:
         with open(ass_path, 'w', encoding='utf-8') as f:
             f.write('\n'.join(ass_content))
 
-        logging.info(f"Ass字幕已生成: {ass_path}，{font_dir}")
+        logging.info(f"Ass file saved: {ass_path}，{font_dir}")
 
         return ass_path, font_dir
 
@@ -174,7 +174,7 @@ class AssProcessor:
         ]
 
         ffmpeg_cmd = " ".join(cmd)  # 打印实际执行的命令（调试用）
-        logging.info(f"执行的 FFmpeg 命令: {ffmpeg_cmd}")
+        logging.info(f"FFmpeg cmd: {ffmpeg_cmd}")
         subprocess.run(
             cmd,
             capture_output=True,

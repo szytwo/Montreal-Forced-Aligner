@@ -1,3 +1,4 @@
+import json
 import re
 from datetime import timedelta
 
@@ -137,3 +138,39 @@ class SrtProcessor:
                 f.write(f"{text}\n\n")
 
         logging.info(f"SRT file saved to {output_srt_path}")
+
+    # noinspection PyTypeChecker
+    @staticmethod
+    def textgrid_to_json(textgrid_path, output_json_path, language='auto'):
+        """
+        将 TextGrid 文件转换为 json 字幕文件
+
+        :param textgrid_path: 输入的 TextGrid 文件路径
+        :param output_json_path: 输出的 json 文件路径
+        :param language: 语言代码
+        """
+        tg = TextGrid.fromFile(textgrid_path)
+        tier = tg[0]  # 假设对齐文本在第一个层级
+        subtitles = []
+        subtitle_id = 1
+        for idx, interval in enumerate(tier.intervals):
+            word = interval.mark.strip()
+            word = SrtProcessor.remove_punctuation(word)
+            if word:
+                start_time = interval.minTime
+                end_time = interval.maxTime
+                if language == 'zh' or language == 'zh-cn':
+                    # 转换为简体中文
+                    word = convert(word, 'zh-cn')
+                subtitles.append({
+                    "id": subtitle_id,
+                    "start": SrtProcessor.format_time(start_time),
+                    "end": SrtProcessor.format_time(end_time),
+                    "text": word
+                })
+                subtitle_id += 1
+        # 写入JSON文件
+        with open(output_json_path, 'w', encoding='utf-8') as f:
+            json.dump(subtitles, f, ensure_ascii=False, indent=2)
+
+        logging.info(f"JSON file saved to {output_json_path}")

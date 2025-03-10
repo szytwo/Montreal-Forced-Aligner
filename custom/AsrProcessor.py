@@ -92,9 +92,16 @@ class AsrProcessor:
                     language=language
                 )
 
+                # 将 TextGrid 文件转换为 json 文件
+                json_file = os.path.join(audio_dir, f"{audio_name}.json")
+                SrtProcessor.textgrid_to_json(
+                    textgrid_path=textgrid_file,
+                    output_json_path=json_file,
+                    language=language
+                )
                 logging.info("ASR 音频与文本对齐完成!")
 
-                return srt_file
+                return srt_file, json_file
         except Exception as e:
             TextProcessor.log_error(e)
 

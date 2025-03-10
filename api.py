@@ -218,7 +218,7 @@ async def process_audio(
             max_line_len = TextProcessor.calc_max_line_len(video_width, font_size, language)
 
         mfa_align_processor = MfaAlignProcessor()
-        subtitle_path = mfa_align_processor.align_audio_with_text(
+        subtitle_file, json_file = mfa_align_processor.align_audio_with_text(
             audio_path=audio_file,
             text=prompt_text,
             min_line_len=min_line_len,
@@ -226,9 +226,9 @@ async def process_audio(
             language=language
         )
         # MFA失败，则使用ASR
-        if not subtitle_path:
+        if not subtitle_file:
             asr_processor = AsrProcessor()
-            subtitle_path = asr_processor.asr_to_srt(
+            subtitle_file, json_file = asr_processor.asr_to_srt(
                 audio_path=audio_file,
                 min_line_len=min_line_len,
                 max_line_len=max_line_len
@@ -237,7 +237,7 @@ async def process_audio(
         if isass:
             ass_processor = AssProcessor()
             response.ass_path, response.font_dir = ass_processor.create_subtitle_ass(
-                subtitle_file=subtitle_path,
+                subtitle_file=subtitle_file,
                 video_width=video_width,
                 video_height=video_height,
                 font_path=font,
@@ -249,7 +249,8 @@ async def process_audio(
                 opacity=opacity
             )
 
-        response.subtitle_path = subtitle_path
+        response.subtitle_path = subtitle_file
+        response.json_path = json_file
     except Exception as ex:
         TextProcessor.log_error(ex)
         response.errcode = -1

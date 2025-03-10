@@ -10,6 +10,10 @@ class ProcessAudioResponse(ResponseBaseModel):
         default="",
         description="srt文件路径",
     )
+    json_path: Optional[str] = Field(
+        default="",
+        description="json文件路径",
+    )
     ass_path: Optional[str] = Field(
         default="",
         description="ass文件路径",

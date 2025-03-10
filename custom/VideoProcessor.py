@@ -286,7 +286,7 @@ class VideoProcessor:
                 min_line_len = 12 if language == 'en' else 4
 
                 mfa_align_processor = MfaAlignProcessor()
-                subtitle_file = mfa_align_processor.align_audio_with_text(
+                subtitle_file, json_file = mfa_align_processor.align_audio_with_text(
                     audio_path=audio_file,
                     text=prompt_text,
                     min_line_len=min_line_len,
@@ -296,7 +296,7 @@ class VideoProcessor:
                 # MFA失败，则使用ASR
                 if not subtitle_file:
                     asr_processor = AsrProcessor()
-                    subtitle_file = asr_processor.asr_to_srt(
+                    subtitle_file, json_file = asr_processor.asr_to_srt(
                         audio_path=audio_file,
                         min_line_len=min_line_len,
                         max_line_len=max_line_len,
@@ -337,7 +337,6 @@ class VideoProcessor:
                 )
                 # 合成视频
                 final_clip = CompositeVideoClip([video_clip] + subtitle_clips).set_duration(video_clip.duration)
-
                 audio_clip = AudioFileClip(audio_file)
                 # 获取视频和音频的持续时间
                 video_duration = final_clip.duration

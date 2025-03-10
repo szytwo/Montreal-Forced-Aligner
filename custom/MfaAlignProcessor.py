@@ -96,8 +96,14 @@ class MfaAlignProcessor:
                 max_line_len=max_line_len,
                 language=language
             )
-
-            return srt_file
+            # 将 TextGrid 文件转换为 json 文件
+            json_file = os.path.join(audio_dir, f"{audio_name}.json")
+            SrtProcessor.textgrid_to_json(
+                textgrid_path=textgrid_file,
+                output_json_path=json_file,
+                language=language
+            )
+            return srt_file, json_file
         except subprocess.CalledProcessError as e:
             # 捕获任何在处理过程中发生的异常
             ex = Exception(f"Error during alignment: {e.stderr}")

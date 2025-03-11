@@ -101,4 +101,4 @@ class AsrProcessor:
             TextProcessor.log_error(e)
 
         logging.error("ASR 音频与文本对齐失败!")
-        return None
+        return None,None

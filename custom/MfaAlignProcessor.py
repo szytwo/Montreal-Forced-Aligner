@@ -68,6 +68,8 @@ class MfaAlignProcessor:
             "--clean",  # 清理运行前的旧文件
             "--final_clean",  # 清理运行后的临时文件
             "--overwrite",  # 覆盖旧输出
+            "--beam", "100",  # 扩大对齐搜索范围（默认10）
+            "--retry_beam", "400",  # 重试时的搜索范围（默认400）
             "--textgrid_cleanup",  # 打开/关闭 TextGrids 的后处理，以清理静音并重新组合复合词和词语
             "--cleanup_textgrids",
             "--use_mp",  # 启用多进程

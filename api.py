@@ -87,7 +87,7 @@ async def process_tok(request: ProcessTokRequest):
     """
     处理中文分词。
     """
-    response = ProcessTokResponse
+    response = ProcessTokResponse()
 
     try:
         tokenizer = hanlp.load(hanlp.pretrained.tok.COARSE_ELECTRA_SMALL_ZH)
@@ -124,7 +124,7 @@ async def process_video(
     """
     处理视频和音频，生成带有字幕的视频。
     """
-    response = ProcessVideoResponse
+    response = ProcessVideoResponse()
 
     try:
         prompt_text = TextProcessor.clear_text(prompt_text)
@@ -191,7 +191,7 @@ async def process_audio(
     """
     处理音频，生成带有字幕的视频。
     """
-    response = ProcessAudioResponse
+    response = ProcessAudioResponse()
 
     try:
         prompt_text = TextProcessor.clear_text(prompt_text)

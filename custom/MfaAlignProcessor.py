@@ -106,4 +106,4 @@ class MfaAlignProcessor:
             TextProcessor.log_error(ex)
 
         logging.error("MFA 音频与文本对齐失败!")
-        return None,None
+        return None, None

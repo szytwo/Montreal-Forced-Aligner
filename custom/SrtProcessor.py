@@ -42,7 +42,7 @@ class SrtProcessor:
         :param rel_end: 是否移除句尾标点
         :return: 处理后的文本
         """
-        punctuation_pattern = r'：、“”‘’（）《》【】:"\'()<>[\]{}▁'
+        punctuation_pattern = r'：、“”‘’（）《》【】:"()<>[\]{}▁'
         end_punctuation = ''.join(end_punctuations) if rel_end else ''
         punctuation_pattern = f"[{punctuation_pattern}{re.escape(end_punctuation)}]"
 
@@ -101,7 +101,7 @@ class SrtProcessor:
                 # 判断是中文还是英文并处理
                 if is_en and current_length > 0:
                     # 判断单词是否在例外列表中
-                    if language in ['zh', 'zh-cn'] and len(word) >= 2 and word.lower() in exceptions:
+                    if (language in ['zh', 'zh-cn'] and len(word) >= 2 and word.lower() in exceptions) or "'" in word:
                         word = word
                     else:
                         word = ' ' + word  # 英文单词前加空格
@@ -245,9 +245,9 @@ class SrtProcessor:
                 if is_single_letter:
                     allow_line = False
                 # 判断是中文还是英文并处理
-                if is_en and len(word) >= 2 and current_length > 0:
+                if is_en and current_length > 0:
                     # 判断单词是否在例外列表中
-                    if language in ['zh', 'zh-cn'] and word.lower() in exceptions:
+                    if (language in ['zh', 'zh-cn'] and len(word) >= 2 and word.lower() in exceptions) or "'" in word:
                         word = word
                     else:
                         word = ' ' + word  # 英文单词前加空格

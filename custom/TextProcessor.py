@@ -26,9 +26,8 @@ class TextProcessor:
             text = TextProcessor.replace_blank(text)
             text = TextProcessor.replace_corner_mark(text)
             text = text.replace("—", "，")
-        else:
-            text = text.replace("-", " ")
-            text = text.replace("_", " ")
+        text = text.replace("-", " ")
+        text = text.replace("_", " ")
         return text
 
     # whether contain chinese character

@@ -81,7 +81,6 @@ class SrtProcessor:
         end_time = None
         # 为了根据原始文本的标点判断分行，维护一个指针记录在原始文本中的位置
         end_orig_idx = 0  # 分行查找
-        space_orig_idx = 0  # 空格查找
         text_len = len(text)
 
         for index, interval in enumerate(tier.intervals):
@@ -105,13 +104,12 @@ class SrtProcessor:
                 search_text = subtitle_text.strip()
 
                 if search_text:
-                    pos = text.find(search_text, space_orig_idx)
-                    print(f'space search_text {search_text}\n space_orig_idx {space_orig_idx}\n pos {pos}')
+                    pos = text.find(search_text, end_orig_idx)
+                    print(f'space search_text {search_text}\n end_orig_idx {end_orig_idx}\n pos {pos}')
                     if pos != -1:
                         end_pos = pos + + len(search_text)
                         if end_pos < text_len and text[end_pos] == ' ':
                             word = ' ' + word
-                            space_orig_idx = end_pos
 
                 # 增加当前单词到字幕行
                 current_subtitle.append(word)

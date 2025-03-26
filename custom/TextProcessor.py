@@ -7,6 +7,7 @@ import traceback
 import fasttext
 from PIL import ImageFont
 from fontTools.ttLib import TTFont
+from zhconv import convert
 
 from custom.file_utils import logging
 
@@ -20,6 +21,7 @@ class TextProcessor:
     def clear_text(text):
         text = text.replace("\n", "")
         if TextProcessor.contains_chinese(text):
+            text = convert(text, 'zh-cn')
             text = TextProcessor.replace_blank(text)
             text = TextProcessor.replace_corner_mark(text)
             text = text.replace("—", "，")

@@ -85,7 +85,7 @@ class SrtProcessor:
 
         for index, interval in enumerate(tier.intervals):
             word = interval.mark.strip()
-            word = SrtProcessor.remove_punctuation(word)  # 移除标点符号
+            word = SrtProcessor.remove_punctuation(word, True)  # 移除标点符号
             if start_time is None:
                 start_time = interval.minTime
             end_time = interval.maxTime

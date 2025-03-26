@@ -5,7 +5,6 @@ import re
 import traceback
 
 import fasttext
-import unicodedata
 from PIL import ImageFont
 from fontTools.ttLib import TTFont
 from zhconv import convert
@@ -227,6 +226,18 @@ class TextProcessor:
         return max_line_len
 
     @staticmethod
-    def is_cjk(c):
+    def is_cjk_char(c: str) -> bool:
         """判断字符是否是中日韩（CJK）字符"""
-        return unicodedata.east_asian_width(c) in "WF"
+        code = ord(c)
+        return (
+                0x4E00 <= code <= 0x9FFF or  # 基本汉字
+                0x3400 <= code <= 0x4DBF or  # CJK 扩展 A
+                0x20000 <= code <= 0x2A6DF or  # CJK 扩展 B
+                0x2A700 <= code <= 0x2B73F or  # CJK 扩展 C
+                0x2B740 <= code <= 0x2B81F or  # CJK 扩展 D
+                0x2B820 <= code <= 0x2CEAF or  # CJK 扩展 E
+                0x2CEB0 <= code <= 0x2EBEF or  # CJK 扩展 F
+                0x3040 <= code <= 0x30FF or  # 日文假名（平假名 + 片假名）
+                0x31F0 <= code <= 0x31FF or  # 片假名扩展
+                0xAC00 <= code <= 0xD7AF  # 韩文（谚文）
+        )

@@ -208,7 +208,7 @@ class AssProcessor:
         current_length = 0
 
         for i, c in enumerate(text):
-            if c == " " or TextProcessor.is_cjk(c):
+            if c == " " or TextProcessor.is_cjk_char(c):
                 # 如果超出行最大长度，添加换行符
                 if current_length >= max_line_len:
                     current_length = 0

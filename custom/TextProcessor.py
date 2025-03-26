@@ -41,7 +41,8 @@ class TextProcessor:
         # noinspection PyTypeChecker
         def needs_punctuation(segment: str) -> bool:
             """判断段落末尾是否需要补充标点"""
-            return segment and segment[-1] not in "，。！？,!.?"
+            end_punctuations = ['，', '。', '！', '？', '；', '：', ',', '.', '!', '?', ';', ':']
+            return segment and segment[-1] not in end_punctuations
 
         segments = re.split(r"(\n|\\N)", text)  # 先按换行符拆分，并保留换行符
         cleaned_segments = []

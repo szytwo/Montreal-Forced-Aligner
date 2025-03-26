@@ -9,7 +9,7 @@ from custom.TextProcessor import TextProcessor
 from custom.file_utils import logging
 
 # 定义哪些标点作为换行符号
-end_punctuations = ['，', '。', '！', '？', '；', ',', '.', '!', '?', ';']
+end_punctuations = ['，', '。', '！', '？', '；', '：', ',', '.', '!', '?', ';', ':']
 
 
 class SrtProcessor:
@@ -42,7 +42,7 @@ class SrtProcessor:
         :param rel_end: 是否移除句尾标点
         :return: 处理后的文本
         """
-        punctuation_pattern = r'：、“”‘’（）《》【】:"()<>[\]{}▁'
+        punctuation_pattern = r'、“”‘’（）《》【】"()<>[\]{}▁'
         end_punctuation = ''.join(end_punctuations) if rel_end else ''
         punctuation_pattern = f"[{punctuation_pattern}{re.escape(end_punctuation)}]"
 

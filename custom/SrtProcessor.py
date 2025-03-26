@@ -46,8 +46,6 @@ class SrtProcessor:
         if rel_end:
             # 先移除不在数字之间的 `.`
             text = re.sub(r'(?<!\d)\.(?!\d)', '', text)
-            if text == '.':
-                return text
         return re.sub(punctuation_pattern, '', text)
 
     # noinspection PyTypeChecker
@@ -85,7 +83,8 @@ class SrtProcessor:
 
         for index, interval in enumerate(tier.intervals):
             word = interval.mark.strip()
-            word = SrtProcessor.remove_punctuation(word, True)  # 移除标点符号
+            if not word in ['.']:  # 可能是小数点
+                word = SrtProcessor.remove_punctuation(word, True)  # 移除标点符号
             if start_time is None:
                 start_time = interval.minTime
             end_time = interval.maxTime

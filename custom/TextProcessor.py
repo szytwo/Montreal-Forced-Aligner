@@ -35,7 +35,7 @@ class TextProcessor:
     @staticmethod
     def add_comma_before_newline(text: str, comma: str = "，") -> str:
         """
-         在换行符（\n 或 \N）前自动补充标点（默认逗号），然后去掉换行符。
+         在换行符（\n 或 \\N）前自动补充标点（默认逗号），然后去掉换行符。
          """
 
         # noinspection PyTypeChecker

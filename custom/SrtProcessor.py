@@ -104,7 +104,7 @@ class SrtProcessor:
                 # 使用原始文本中的标点信息、空格，判断是否需要换行、空格：
                 subtitle_text = ''.join(current_subtitle)
                 search_text = subtitle_text.strip()
-                if search_text and not word in ['.']:
+                if search_text:
                     pos = text.find(search_text, end_orig_idx)
                     print(f'end search_text {search_text}\n end_orig_idx {end_orig_idx}\n pos {pos}')
                     if pos != -1:
@@ -114,8 +114,11 @@ class SrtProcessor:
                             space = ' '
                             current_subtitle.append(space)
                             current_length += len(space)
+                        # 判断是否为小数，例如 "3.14"
+                        elif end_pos + 1 < text_len and text[end_pos] == '.' and text[end_pos + 1].isdigit():
+                            punctuation_break = False  # 继续拼接，不换行
                         # 判断是否换行
-                        if end_pos < text_len and text[end_pos] in TextProcessor.get_end_punctuations():
+                        elif end_pos < text_len and text[end_pos] in TextProcessor.get_end_punctuations():
                             punctuation_break = True
                             end_orig_idx = end_pos
 

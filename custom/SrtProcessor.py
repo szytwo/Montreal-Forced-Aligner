@@ -93,15 +93,15 @@ class SrtProcessor:
 
             if word:
                 is_en = SrtProcessor.is_english(word)
-                if not is_en and (language == 'zh' or language == 'zh-cn'):
+                if not is_en and language in ['zh', 'zh-cn']:
                     # 转换为简体中文
                     word = convert(word, 'zh-cn')
                 # 记录当前单词及其时间
                 current_word_list.append((word, interval.minTime, interval.maxTime))
                 # 判断是中文还是英文并处理
-                if is_en and len(word) >= 2 and current_length > 0:
+                if is_en and current_length > 0:
                     # 判断单词是否在例外列表中
-                    if (language == 'zh' or language == 'zh-cn') and word.lower() in exceptions:
+                    if language in ['zh', 'zh-cn'] and len(word) >= 2 and word.lower() in exceptions:
                         word = word
                     else:
                         word = ' ' + word  # 英文单词前加空格
@@ -235,7 +235,7 @@ class SrtProcessor:
 
             if word:
                 is_en = SrtProcessor.is_english(word)
-                if not is_en and (language == 'zh' or language == 'zh-cn'):
+                if not is_en and language in ['zh', 'zh-cn']:
                     # 转换为简体中文
                     word = convert(word, 'zh-cn')
                 is_single_letter = is_en and len(word) == 1
@@ -247,7 +247,7 @@ class SrtProcessor:
                 # 判断是中文还是英文并处理
                 if is_en and len(word) >= 2 and current_length > 0:
                     # 判断单词是否在例外列表中
-                    if (language == 'zh' or language == 'zh-cn') and word.lower() in exceptions:
+                    if language in ['zh', 'zh-cn'] and word.lower() in exceptions:
                         word = word
                     else:
                         word = ' ' + word  # 英文单词前加空格

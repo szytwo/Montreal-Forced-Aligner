@@ -41,8 +41,11 @@ class SrtProcessor:
         """
         punctuation_pattern = r'、“”‘’（）《》【】"()<>[\]{}▁'
         end_punctuation = ''.join(TextProcessor.get_end_punctuations()) if rel_end else ''
+        end_punctuation = end_punctuation.replace('.', '')  # 排除 `.` 单独处理
         punctuation_pattern = f"[{punctuation_pattern}{re.escape(end_punctuation)}]"
-
+        if rel_end:
+            # 先移除不在数字之间的 `.`
+            text = re.sub(r'(?<!\d)\.(?!\d)', '', text)
         return re.sub(punctuation_pattern, '', text)
 
     # noinspection PyTypeChecker
@@ -77,7 +80,8 @@ class SrtProcessor:
         start_time = None
         end_time = None
         # 为了根据原始文本的标点判断分行，维护一个指针记录在原始文本中的位置
-        orig_idx = 0
+        end_orig_idx = 0  # 分行查找
+        space_orig_idx = 0  # 空格查找
         text_len = len(text)
 
         for index, interval in enumerate(tier.intervals):
@@ -95,36 +99,37 @@ class SrtProcessor:
                     word = convert(word, 'zh-cn')
                 # 记录当前单词及其时间
                 current_word_list.append((word, interval.minTime, interval.maxTime))
-                # 判断是中文还是英文并处理
-                if is_en and current_length > 0:
-                    # 判断单词是否在例外列表中
-                    if (language in ['zh', 'zh-cn'] and len(word) >= 2 and word.lower() in exceptions) or "'" in word:
-                        word = word
-                    else:
-                        word = ' ' + word  # 英文单词前加空格
+
+                # 使用原始文本中的空格信息判断是否需要空格
+                subtitle_text = ''.join(current_subtitle)
+                search_text = subtitle_text.strip()
+
+                if search_text:
+                    pos = text.find(search_text, space_orig_idx)
+                    print(f'space search_text {search_text}\n space_orig_idx {space_orig_idx}\n pos {pos}')
+                    if pos != -1:
+                        end_pos = pos + + len(search_text)
+                        if end_pos < text_len and text[end_pos] == ' ':
+                            word = ' ' + word
+                            space_orig_idx = end_pos
+
                 # 增加当前单词到字幕行
                 current_subtitle.append(word)
                 current_length += len(word)
+
                 # 使用原始文本中的标点信息判断是否需要换行：
-                # 1. 将当前字幕拼接起来
                 subtitle_text = ''.join(current_subtitle)
-                # 2. 尝试在原始文本中找到匹配部分（假设顺序一致）
-                #    忽略前导空格可能造成的问题
                 search_text = subtitle_text.strip()
                 if search_text:
-                    print(search_text)
-                    print(orig_idx)
-                    pos = text.find(search_text, orig_idx)
-                    print(pos)
+                    pos = text.find(search_text, end_orig_idx)
+                    print(f'end search_text {search_text}\n end_orig_idx {end_orig_idx}\n pos {pos}')
                     if pos != -1:
-                        # 将原指针移动到匹配结束的位置
                         end_pos = pos + len(search_text)
-                        # 如果未到文本结尾，且下一个字符为标点，则认为此处应该分行
                         if end_pos < text_len and text[end_pos] in TextProcessor.get_end_punctuations():
                             punctuation_break = True
-                            orig_idx = end_pos  # 更新 orig_idx 为当前匹配结束
+                            end_orig_idx = end_pos
 
-            # 如果无文字或长度超出限制，则分行
+            # 按标点信息分行
             if punctuation_break:
                 if current_subtitle:  # 确保当前字幕行非空
                     subtitle_text = ''.join(current_subtitle)
@@ -242,9 +247,9 @@ class SrtProcessor:
                 if is_single_letter:
                     allow_line = False
                 # 判断是中文还是英文并处理
-                if is_en and current_length > 0:
+                if is_en and len(word) >= 2 and current_length > 0:
                     # 判断单词是否在例外列表中
-                    if (language in ['zh', 'zh-cn'] and len(word) >= 2 and word.lower() in exceptions) or "'" in word:
+                    if (language == 'zh' or language == 'zh-cn') and word.lower() in exceptions:
                         word = word
                     else:
                         word = ' ' + word  # 英文单词前加空格

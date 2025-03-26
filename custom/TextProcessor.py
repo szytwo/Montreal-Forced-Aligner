@@ -27,7 +27,7 @@ class TextProcessor:
     def clear_text(text):
         # 替换连续多个空格为一个空格
         text = re.sub(r'\s+', ' ', text)
-        
+
         if TextProcessor.contains_chinese(text):
             text = TextProcessor.add_comma_before_newline(text, "，")
             text = convert(text, 'zh-cn')
@@ -89,6 +89,7 @@ class TextProcessor:
     # replace special symbol
     @staticmethod
     def replace_corner_mark(text):
+        text = text.replace('℃', '°C')
         text = text.replace('²', '平方')
         text = text.replace('³', '立方')
         return text

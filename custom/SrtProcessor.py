@@ -96,24 +96,11 @@ class SrtProcessor:
                     word = convert(word, 'zh-cn')
                 # 记录当前单词及其时间
                 current_word_list.append((word, interval.minTime, interval.maxTime))
-
-                # 使用原始文本中的空格信息判断是否需要空格
-                subtitle_text = ''.join(current_subtitle)
-                search_text = subtitle_text.strip()
-
-                if search_text:
-                    pos = text.find(search_text, end_orig_idx)
-                    print(f'space search_text {search_text}\n end_orig_idx {end_orig_idx}\n pos {pos}')
-                    if pos != -1:
-                        end_pos = pos + + len(search_text)
-                        if end_pos < text_len and text[end_pos] == ' ':
-                            word = ' ' + word
-
                 # 增加当前单词到字幕行
                 current_subtitle.append(word)
                 current_length += len(word)
 
-                # 使用原始文本中的标点信息判断是否需要换行：
+                # 使用原始文本中的标点信息、空格，判断是否需要换行、空格：
                 subtitle_text = ''.join(current_subtitle)
                 search_text = subtitle_text.strip()
                 if search_text:
@@ -121,6 +108,12 @@ class SrtProcessor:
                     print(f'end search_text {search_text}\n end_orig_idx {end_orig_idx}\n pos {pos}')
                     if pos != -1:
                         end_pos = pos + len(search_text)
+                        # 判断是否空格
+                        if end_pos < text_len and text[end_pos] == ' ':
+                            space = ' '
+                            current_subtitle.append(space)
+                            current_length += len(space)
+                        # 判断是否换行
                         if end_pos < text_len and text[end_pos] in TextProcessor.get_end_punctuations():
                             punctuation_break = True
                             end_orig_idx = end_pos

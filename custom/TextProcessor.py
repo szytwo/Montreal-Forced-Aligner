@@ -1,6 +1,7 @@
 import datetime
 import json
 import os
+import re
 import traceback
 
 import fasttext
@@ -18,8 +19,31 @@ class TextProcessor:
     @staticmethod
     def clear_text(text):
         text = text.replace("\n", "")
-        text = TextProcessor.replace_corner_mark(text)
+        if TextProcessor.contains_chinese(text):
+            text = TextProcessor.replace_blank(text)
+            text = TextProcessor.replace_corner_mark(text)
+            text = text.replace("—", "，")
         return text
+
+    # whether contain chinese character
+    @staticmethod
+    def contains_chinese(text):
+        chinese_char_pattern = re.compile(r'[\u4e00-\u9fff]+')
+        return bool(chinese_char_pattern.search(text))
+
+    # noinspection PyTypeChecker
+    # remove blank between chinese character
+    @staticmethod
+    def replace_blank(text: str):
+        out_str = []
+        for i, c in enumerate(text):
+            if c == " ":
+                if ((text[i + 1].isascii() and text[i + 1] != " ") and
+                        (text[i - 1].isascii() and text[i - 1] != " ")):
+                    out_str.append(c)
+            else:
+                out_str.append(c)
+        return "".join(out_str)
 
     # replace special symbol
     @staticmethod

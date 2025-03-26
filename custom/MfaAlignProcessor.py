@@ -17,7 +17,15 @@ class MfaAlignProcessor:
         """
         self.model_dir = model_dir
 
-    def align_audio_with_text(self, audio_path, text, min_line_len=0, max_line_len=40, language=None):
+    def align_audio_with_text(
+            self,
+            audio_path,
+            text,
+            min_line_len=0,
+            max_line_len=40,
+            language=None,
+            split_type="silence"
+    ):
         """
         使用 MFA 进行音频与文本对齐
         :param audio_path: 包含音频文件的路径
@@ -25,6 +33,7 @@ class MfaAlignProcessor:
         :param min_line_len: 行最小长度
         :param max_line_len: 行最大长度
         :param language: 语言
+        :param split_type: 分行方法："silence"静音，"punctuation"标点符号
         """
         if not language:
             language = TextProcessor.detect_language(text)
@@ -92,14 +101,23 @@ class MfaAlignProcessor:
             srt_file = os.path.join(audio_dir, f"{audio_name}.srt")
             json_file = os.path.join(audio_dir, f"{audio_name}.json")
             # 将 TextGrid 文件转换为 SRT 文件
-            SrtProcessor.textgrid_to_srt(
-                textgrid_path=textgrid_file,
-                output_srt_path=srt_file,
-                output_json_path=json_file,
-                min_line_len=min_line_len,
-                max_line_len=max_line_len,
-                language=language
-            )
+            if split_type == "punctuation":
+                SrtProcessor.textgrid_to_srt_for_punctuation(
+                    text=text,
+                    textgrid_path=textgrid_file,
+                    output_srt_path=srt_file,
+                    output_json_path=json_file,
+                    language=language
+                )
+            else:
+                SrtProcessor.textgrid_to_srt_for_silence(
+                    textgrid_path=textgrid_file,
+                    output_srt_path=srt_file,
+                    output_json_path=json_file,
+                    min_line_len=min_line_len,
+                    max_line_len=max_line_len,
+                    language=language
+                )
 
             return srt_file, json_file
         except subprocess.CalledProcessError as e:

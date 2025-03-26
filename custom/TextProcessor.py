@@ -20,15 +20,43 @@ class TextProcessor:
 
     @staticmethod
     def clear_text(text):
-        text = text.replace("\n", "")
         if TextProcessor.contains_chinese(text):
+            text = TextProcessor.add_comma_before_newline(text, "，")
             text = convert(text, 'zh-cn')
             text = TextProcessor.replace_blank(text)
             text = TextProcessor.replace_corner_mark(text)
             text = text.replace("—", "，")
+        else:
+            text = TextProcessor.add_comma_before_newline(text, ",")
         text = text.replace("-", " ")
         text = text.replace("_", " ")
         return text
+
+    # noinspection PyTypeChecker
+    @staticmethod
+    def add_comma_before_newline(text: str, comma: str = "，") -> str:
+        """
+         在换行符（\n 或 \N）前自动补充标点（默认逗号），然后去掉换行符。
+         """
+
+        # noinspection PyTypeChecker
+        def needs_punctuation(segment: str) -> bool:
+            """判断段落末尾是否需要补充标点"""
+            return segment and segment[-1] not in "，。！？,!.?"
+
+        segments = re.split(r"(\n|\\N)", text)  # 先按换行符拆分，并保留换行符
+        cleaned_segments = []
+
+        for i in range(len(segments)):
+            if segments[i] in {"\n", "\\N"}:
+                continue  # 直接跳过换行符，不添加到结果中
+            if i < len(segments) - 1 and segments[i + 1] in {"\n", "\\N"}:
+                # 如果后面是换行符，则检查是否需要补标点
+                if needs_punctuation(segments[i]):
+                    segments[i] += comma
+            cleaned_segments.append(segments[i])
+
+        return "".join(cleaned_segments)
 
     # whether contain chinese character
     @staticmethod

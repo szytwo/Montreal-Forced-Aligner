@@ -46,6 +46,8 @@ class SrtProcessor:
         if rel_end:
             # 先移除不在数字之间的 `.`
             text = re.sub(r'(?<!\d)\.(?!\d)', '', text)
+            if text == '.':
+                return text
         return re.sub(punctuation_pattern, '', text)
 
     # noinspection PyTypeChecker

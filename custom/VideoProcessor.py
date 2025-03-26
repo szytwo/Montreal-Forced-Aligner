@@ -240,7 +240,7 @@ class VideoProcessor:
             opacity: int = 0,
             fps: int = 25,
             isass: bool = False
-    ) -> tuple[str | Any, str | None | Any] | None:
+    ) -> tuple[str | None | Any, str | None | Any, str | None | Any, str | None | Any] | None:
         """
         给视频添加字幕（以及可选的音频）并输出。
         :param video_file: 视频文件路径
@@ -279,12 +279,10 @@ class VideoProcessor:
             video_clip = VideoFileClip(video_file)
             video_width = video_clip.w  # 获取视频宽度
             video_height = video_clip.h  # 获取视频高度
+            max_line_len = TextProcessor.calc_max_line_len(video_width, font_size, language)  # 每行最大字符数
+            min_line_len = 12 if language == 'en' else 4
             # 如果没有提供字幕文件，使用 MFA 对齐生成
             if not subtitle_file and prompt_text:
-                max_line_len = TextProcessor.calc_max_line_len(video_width, font_size, language)  # 每行最大字符数
-
-                min_line_len = 12 if language == 'en' else 4
-
                 mfa_align_processor = MfaAlignProcessor()
                 subtitle_file, json_file = mfa_align_processor.align_audio_with_text(
                     audio_path=audio_file,
@@ -314,7 +312,8 @@ class VideoProcessor:
                     stroke_color=stroke_color,
                     stroke_width=stroke_width,
                     bottom=bottom,
-                    opacity=opacity
+                    opacity=opacity,
+                    max_line_len=max_line_len
                 )
 
                 output_video = ass_processor.subtitle_with_ffmpeg(

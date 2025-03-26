@@ -5,6 +5,7 @@ import re
 import traceback
 
 import fasttext
+import unicodedata
 from PIL import ImageFont
 from fontTools.ttLib import TTFont
 from zhconv import convert
@@ -27,6 +28,7 @@ class TextProcessor:
             text = text.replace("—", "，")
         else:
             text = text.replace("-", " ")
+            text = text.replace("_", " ")
         return text
 
     # whether contain chinese character
@@ -196,3 +198,8 @@ class TextProcessor:
 
         logging.info(f"max_line_len: {max_line_len}")
         return max_line_len
+
+    @staticmethod
+    def is_cjk(c):
+        """判断字符是否是中日韩（CJK）字符"""
+        return unicodedata.east_asian_width(c) in "WF"

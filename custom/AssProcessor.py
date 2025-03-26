@@ -48,7 +48,8 @@ class AssProcessor:
                             stroke_color: str = "black",
                             stroke_width: int = 1,
                             bottom: int = 10,
-                            opacity: int = 0
+                            opacity: int = 0,
+                            max_line_len=40
                             ) -> str:
         """
         从 SRT 字幕文件创建 ASS 字幕文件。
@@ -62,6 +63,7 @@ class AssProcessor:
         :param stroke_width: 描边宽度
         :param bottom: 字幕距底部距离
         :param opacity: 透明度（0-255，0=不透明）
+        :param max_line_len: 行最大长度
         :return: ASS 文件路径
         """
         if not os.path.exists(subtitle_file):
@@ -125,6 +127,7 @@ class AssProcessor:
         for start, end, text in subtitles:
             ass_start = self.srt_time_to_ass(start)
             ass_end = self.srt_time_to_ass(end)
+            text = self.wrap_text(text)
             ass_content.append(f"Dialogue: 0,{ass_start},{ass_end},Default,,0,0,0,,{text}")
 
         # 写入 ASS 文件
@@ -186,3 +189,32 @@ class AssProcessor:
         logging.info(f"字幕已到烧录视频: {video_output}")
 
         return video_output
+
+    @staticmethod
+    def wrap_text(text: str,
+                  max_line_len: int = 40,
+                  line_break: str = "\\N") -> str:
+        """
+        自动换行文本（支持中英文混合），避免超出屏幕宽度。
+        :param text: 原始文本（可能包含换行符）
+        :param max_line_len: 行最大字符个数
+        :param line_break: 换行符（ASS格式用\\N）
+        :return: 处理后的文本
+        """
+        if not text:
+            return text
+
+        out_str = []
+        current_length = 0
+
+        for i, c in enumerate(text):
+            if c == " " or TextProcessor.is_cjk(c):
+                # 如果超出行最大长度，添加换行符
+                if current_length >= max_line_len:
+                    current_length = 0
+                    out_str.append(line_break)
+
+            out_str.append(c)
+            current_length += 1
+
+        return "".join(out_str)

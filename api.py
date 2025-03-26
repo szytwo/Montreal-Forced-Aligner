@@ -246,7 +246,8 @@ async def process_audio(
                 stroke_color=stroke_color,
                 stroke_width=stroke_width,
                 bottom=bottom,
-                opacity=opacity
+                opacity=opacity,
+                max_line_len=max_line_len
             )
 
         response.subtitle_path = subtitle_file

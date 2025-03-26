@@ -98,8 +98,8 @@ class AsrProcessor:
                 # 将 TextGrid 文件转换为 SRT 文件
                 srt_file = os.path.join(audio_dir, f"{audio_name}.srt")
                 json_file = os.path.join(audio_dir, f"{audio_name}.json")
-                
-                if split_type == "punctuation":
+
+                if split_type == "punctuation" and language in ['zh', 'zh-cn', 'en']:
                     SrtProcessor.textgrid_to_srt_for_punctuation(
                         text=text,
                         textgrid_path=textgrid_file,

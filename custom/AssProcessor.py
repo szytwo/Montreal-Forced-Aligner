@@ -127,7 +127,7 @@ class AssProcessor:
         for start, end, text in subtitles:
             ass_start = self.srt_time_to_ass(start)
             ass_end = self.srt_time_to_ass(end)
-            text = self.wrap_text(text)
+            text = self.wrap_text(text, max_line_len)
             ass_content.append(f"Dialogue: 0,{ass_start},{ass_end},Default,,0,0,0,,{text}")
 
         # 写入 ASS 文件

@@ -217,10 +217,10 @@ class TextProcessor:
         """
         if language == 'en':
             # 英文字符：宽度为 font_size * 0.5
-            max_line_len = int(video_width * 0.9 // (font_size * 0.5))
+            max_line_len = int(video_width * 0.96 // (font_size * 0.5))
         else:
             # 中文字符：等宽，宽度为 font_size
-            max_line_len = int(video_width * 0.9 // font_size)
+            max_line_len = int(video_width * 0.96 // font_size)
 
         logging.info(f"max_line_len: {max_line_len}")
         return max_line_len

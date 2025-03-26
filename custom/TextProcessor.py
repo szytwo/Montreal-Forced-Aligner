@@ -27,7 +27,7 @@ class TextProcessor:
     def clear_text(text):
         # 替换连续多个空格为一个空格
         text = re.sub(r'\s+', ' ', text)
-        
+
         if TextProcessor.contains_chinese(text):
             text = TextProcessor.add_comma_before_newline(text, "，")
             text = convert(text, 'zh-cn')
@@ -38,6 +38,8 @@ class TextProcessor:
             text = TextProcessor.add_comma_before_newline(text, ",")
         text = text.replace("-", " ")
         text = text.replace("_", " ")
+        # 替换数字之间的 :： 为空格
+        text = re.sub(r'(?<=\d)[:：](?=\d)', ' ', text)
         # 替换连续多个空格为一个空格
         text = re.sub(r'\s+', ' ', text)
         return text

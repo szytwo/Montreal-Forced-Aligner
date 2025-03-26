@@ -104,7 +104,7 @@ class SrtProcessor:
                 # 使用原始文本中的标点信息、空格，判断是否需要换行、空格：
                 subtitle_text = ''.join(current_subtitle)
                 search_text = subtitle_text.strip()
-                if search_text:
+                if search_text and not word in ['.']:
                     pos = text.find(search_text, end_orig_idx)
                     print(f'end search_text {search_text}\n end_orig_idx {end_orig_idx}\n pos {pos}')
                     if pos != -1:

@@ -18,6 +18,12 @@ class TextProcessor:
     """
 
     @staticmethod
+    def get_end_punctuations():
+        # 定义哪些标点作为换行符号
+        end_punctuations = ['，', '。', '！', '？', '；', '：', ',', '.', '!', '?', ';', ':']
+        return end_punctuations
+
+    @staticmethod
     def clear_text(text):
         if TextProcessor.contains_chinese(text):
             text = TextProcessor.add_comma_before_newline(text, "，")
@@ -41,8 +47,7 @@ class TextProcessor:
         # noinspection PyTypeChecker
         def needs_punctuation(segment: str) -> bool:
             """判断段落末尾是否需要补充标点"""
-            end_punctuations = ['，', '。', '！', '？', '；', '：', ',', '.', '!', '?', ';', ':']
-            return segment and segment[-1] not in end_punctuations
+            return segment and segment[-1] not in TextProcessor.get_end_punctuations()
 
         segments = re.split(r"(\n|\\N)", text)  # 先按换行符拆分，并保留换行符
         cleaned_segments = []

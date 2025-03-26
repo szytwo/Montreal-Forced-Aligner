@@ -8,9 +8,6 @@ from zhconv import convert
 from custom.TextProcessor import TextProcessor
 from custom.file_utils import logging
 
-# 定义哪些标点作为换行符号
-end_punctuations = ['，', '。', '！', '？', '；', '：', ',', '.', '!', '?', ';', ':']
-
 
 class SrtProcessor:
     @staticmethod
@@ -43,7 +40,7 @@ class SrtProcessor:
         :return: 处理后的文本
         """
         punctuation_pattern = r'、“”‘’（）《》【】"()<>[\]{}▁'
-        end_punctuation = ''.join(end_punctuations) if rel_end else ''
+        end_punctuation = ''.join(TextProcessor.get_end_punctuations()) if rel_end else ''
         punctuation_pattern = f"[{punctuation_pattern}{re.escape(end_punctuation)}]"
 
         return re.sub(punctuation_pattern, '', text)
@@ -123,7 +120,7 @@ class SrtProcessor:
                         # 将原指针移动到匹配结束的位置
                         end_pos = pos + len(search_text)
                         # 如果未到文本结尾，且下一个字符为标点，则认为此处应该分行
-                        if end_pos < text_len and text[end_pos] in end_punctuations:
+                        if end_pos < text_len and text[end_pos] in TextProcessor.get_end_punctuations():
                             punctuation_break = True
                             orig_idx = end_pos  # 更新 orig_idx 为当前匹配结束
 

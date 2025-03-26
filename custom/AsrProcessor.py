@@ -69,7 +69,7 @@ class AsrProcessor:
             audio_path,
             min_line_len=0,
             max_line_len=40,
-            split_type="silence"
+            split_type="punctuation"
     ):
         """
         使用 ASR 进行音频与文本对齐

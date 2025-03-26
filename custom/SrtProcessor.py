@@ -68,8 +68,6 @@ class SrtProcessor:
         """
         text = SrtProcessor.remove_punctuation(text, False)
         print(text)
-        keywords = TextProcessor.get_keywords()
-        exceptions = keywords["exceptions"]  # 获取例外单词列表
         tg = TextGrid.fromFile(textgrid_path)
         tier = tg[0]  # 假设对齐文本在第一个层级
         subtitles = []

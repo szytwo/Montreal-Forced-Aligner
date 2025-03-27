@@ -97,18 +97,28 @@ class SrtProcessor:
         # 为了根据原始文本的标点判断分行，维护一个指针记录在原始文本中的位置
         end_orig_idx = 0  # 分行查找
         text_len = len(text)
+        interval_len = len(tier.intervals)
 
         for index, interval in enumerate(tier.intervals):
             raw_word = interval.mark.strip()
+            next_index = index + 1
+
+            if raw_word and start_time is None:
+                start_time = interval.minTime
+            end_time = interval.maxTime
             # 拆分出各个部分
             tokens = SrtProcessor.split_tokens(raw_word)
 
             for token in tokens:
-                word = SrtProcessor.remove_punctuation(token, True)
+                if not token in ['.']:  # 可能是小数点
+                    token = SrtProcessor.remove_punctuation(token, True)  # 移除标点符号
 
-                if start_time is None:
-                    start_time = interval.minTime
-                end_time = interval.maxTime
+                word = token
+
+                if start_time is None and next_index < interval_len:
+                    start_time = tier.intervals[next_index].minTime
+                    end_time = tier.intervals[next_index].maxTime
+
                 punctuation_break = False
 
                 if word:

@@ -37,7 +37,7 @@ class TextProcessor:
         else:
             text = TextProcessor.add_comma_before_newline(text, ",")
         # 替换一些影响对齐的符号
-        text = re.sub(r'[（）]', '', text)
+        text = re.sub(r'[（）()]', '', text)
         # 替换数字之间的 :：及一些连接符号为空格
         text = re.sub(r'(?<=\d)[:：](?=\d)|[-_]', ' ', text)
         # 最后替换连续多个空格为一个空格

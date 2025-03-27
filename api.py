@@ -1,4 +1,5 @@
 import argparse
+import time
 from pathlib import Path
 
 import hanlp
@@ -88,6 +89,8 @@ async def process_tok(request: ProcessTokRequest):
     处理中文分词。
     """
     response = ProcessTokResponse()
+    # 记录开始时间
+    start_time = time.time()
 
     try:
         tokenizer = hanlp.load(hanlp.pretrained.tok.COARSE_ELECTRA_SMALL_ZH)
@@ -99,6 +102,10 @@ async def process_tok(request: ProcessTokRequest):
         TextProcessor.log_error(ex)
         response.errcode = -1
         response.errmsg = f"处理失败：{str(ex)}"
+
+    # 计算耗时
+    elapsed = time.time() - start_time
+    logging.info(f"分词生成完成，用时: {elapsed}")
 
     return response
 
@@ -125,6 +132,8 @@ async def process_video(
     处理视频和音频，生成带有字幕的视频。
     """
     response = ProcessVideoResponse()
+    # 记录开始时间
+    start_time = time.time()
 
     try:
         prompt_text = TextProcessor.clear_text(prompt_text)
@@ -167,6 +176,10 @@ async def process_video(
         # 删除过期文件
         delete_old_files_and_folders(result_dir, 1)
 
+    # 计算耗时
+    elapsed = time.time() - start_time
+    logging.info(f"字幕生成完成，用时: {elapsed}")
+
     return response
 
 
@@ -192,6 +205,8 @@ async def process_audio(
     处理音频，生成带有字幕的视频。
     """
     response = ProcessAudioResponse()
+    # 记录开始时间
+    start_time = time.time()
 
     try:
         prompt_text = TextProcessor.clear_text(prompt_text)
@@ -259,6 +274,10 @@ async def process_audio(
     finally:
         # 删除过期文件
         delete_old_files_and_folders(result_dir, 1)
+
+    # 计算耗时
+    elapsed = time.time() - start_time
+    logging.info(f"字幕生成完成，用时: {elapsed}")
 
     return response
 

@@ -111,9 +111,9 @@ class SrtProcessor:
 
             for token in tokens:
                 if not token in ['.']:  # 可能是小数点
-                    token = SrtProcessor.remove_punctuation(token, True)  # 移除标点符号
-
-                word = token
+                    word = SrtProcessor.remove_punctuation(token, True)  # 移除标点符号
+                else:
+                    word = token
 
                 if start_time is None and next_index < interval_len:
                     start_time = tier.intervals[next_index].minTime
@@ -138,20 +138,35 @@ class SrtProcessor:
                     if search_text:
                         pos = text.find(search_text, end_orig_idx)
                         print(f'end search_text {search_text}\n end_orig_idx {end_orig_idx}\n pos {pos}')
+
                         if pos != -1:
-                            end_pos = pos + len(search_text)
+                            end_pos = pos + len(search_text)  # 在 text 里最后一个字符的索引 + 1
                             # 判断是否空格
                             if end_pos < text_len and text[end_pos] == ' ':
                                 space = ' '
                                 current_subtitle.append(space)
                                 current_length += len(space)
                             # 判断是否为小数，例如 "3.14"
-                            elif end_pos + 1 < text_len and text[end_pos] == '.' and text[end_pos + 1].isdigit():
+                            elif (end_pos + 1 < text_len
+                                  and ((text[end_pos] == '.'
+                                        and text[end_pos - 1].isdigit()
+                                        and text[end_pos + 1].isdigit()
+                                       )
+                                       or (word in ['.']
+                                           and (text[end_pos - 2].isdigit()
+                                                and text[end_pos].isdigit()
+                                           )
+                                       ))):
                                 punctuation_break = False  # 继续拼接，不换行
                             # 判断是否换行
                             elif end_pos < text_len and text[end_pos] in TextProcessor.get_end_punctuations():
                                 punctuation_break = True
                                 end_orig_idx = end_pos
+                            else:
+                                if word in ['.']:  # 不是小数点，移除最后一个
+                                    current_word_list.pop()
+                                    current_subtitle.pop()
+                                    current_length -= len(word)
 
                 # 按标点信息分行
                 if punctuation_break:

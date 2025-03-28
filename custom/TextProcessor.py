@@ -3,11 +3,12 @@ import json
 import os
 import re
 import traceback
+
+import fasttext
 from PIL import ImageFont
 from fontTools.ttLib import TTFont
 from zhconv import convert
 
-import fasttext
 from custom.file_utils import logging
 
 
@@ -35,6 +36,8 @@ class TextProcessor:
             text = text.replace("—", "，")
         else:
             text = TextProcessor.add_comma_before_newline(text, ",")
+
+        text = text.replace("×", "x")  # 乘号
         # 替换中文省略号为逗号（或者你可以选择直接删除）
         text = re.sub(r'…+', '，', text)
         # 替换一些影响对齐的符号

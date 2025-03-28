@@ -27,6 +27,10 @@ class TextProcessor:
     def clear_text(text):
         # 替换连续多个空格为一个空格
         text = re.sub(r'[ \t]+', ' ', text)
+        # 替换中文省略号为逗号（或者你可以选择直接删除）
+        text = re.sub(r'[…⋯]+|[～]', '，', text)
+        # 替换一些影响对齐的符号
+        text = re.sub(r'[（）()\u00A0]', '', text)
 
         if TextProcessor.contains_chinese(text):
             text = TextProcessor.add_comma_before_newline(text, "，")
@@ -38,10 +42,6 @@ class TextProcessor:
             text = TextProcessor.add_comma_before_newline(text, ",")
 
         text = text.replace("×", "x")  # 乘号
-        # 替换中文省略号为逗号（或者你可以选择直接删除）
-        text = re.sub(r'…+|[～]', '，', text)
-        # 替换一些影响对齐的符号
-        text = re.sub(r'[（）()]', '', text)
         # 替换数字之间的 :：及一些连接符号为空格
         text = re.sub(r'(?<=\d)[:：](?=\d)|[-_]', ' ', text)
         # 最后替换连续多个空格为一个空格

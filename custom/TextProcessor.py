@@ -39,7 +39,7 @@ class TextProcessor:
 
         text = text.replace("×", "x")  # 乘号
         # 替换中文省略号为逗号（或者你可以选择直接删除）
-        text = re.sub(r'…+', '，', text)
+        text = re.sub(r'…+|[～]', '，', text)
         # 替换一些影响对齐的符号
         text = re.sub(r'[（）()]', '', text)
         # 替换数字之间的 :：及一些连接符号为空格

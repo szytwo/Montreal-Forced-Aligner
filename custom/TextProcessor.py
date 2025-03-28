@@ -25,6 +25,7 @@ class TextProcessor:
 
     @staticmethod
     def clear_text(text):
+        end_punctuation = ''.join(TextProcessor.get_end_punctuations())
         # 替换连续多个空格为一个空格
         text = re.sub(r'[ \t]+', ' ', text)
         # 替换中文省略号为逗号（或者你可以选择直接删除）
@@ -44,6 +45,8 @@ class TextProcessor:
         text = text.replace("×", "x")  # 乘号
         # 替换数字之间的 :：及一些连接符号为空格
         text = re.sub(r'(?<=\d)[:：](?=\d)|[-_]', ' ', text)
+        # 去除标点符号前的空格
+        text = re.sub(fr'\s+([{re.escape(end_punctuation)}])', r'\1', text)
         # 最后替换连续多个空格为一个空格
         text = re.sub(r'[ \t]+', ' ', text)
 

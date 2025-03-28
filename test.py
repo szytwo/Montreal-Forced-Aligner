@@ -8,7 +8,7 @@ This thousand-year-old temple houses twin pagodas from the Song Dynastyexquisite
 Strolling through the temple, you can immerse yourself in Buddhist culture while discovering perfect photo spots. Located just 5 minutes from West Street's food alley, it's the ideal blend of sightseeingdining!"""
 # 查看文本的原始表示
 print(repr(text))
-dir = "8811cosyvoice"
+dir = "8910cosyvoice"
 textgrid_file = f"D:/AI/Montreal-Forced-Aligner/results/{dir}/{dir}.TextGrid"
 srt_file = f"D:/AI/Montreal-Forced-Aligner/results/{dir}/{dir}.srt"
 json_file = f"D:/AI/Montreal-Forced-Aligner/results/{dir}/{dir}.json"

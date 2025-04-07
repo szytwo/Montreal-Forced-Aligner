@@ -1,5 +1,5 @@
 # 使用 PyTorch 官方 CUDA 12.1 运行时镜像
-FROM pytorch/pytorch:2.2.2-cuda12.1-cudnn8-runtime
+FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
 
 # 设置容器内工作目录为 /workspace
 WORKDIR /workspace
@@ -32,6 +32,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
 
 # 安装 Python 3.10.16 到自定义路径
 # 使用 update-alternatives 设置 Python 3.10.16 为默认 Python 版本
+# https://mirrors.aliyun.com/python-release/
 COPY wheels/linux/Python-3.10.16.tgz .
 
 RUN tar -xzf Python-3.10.16.tgz \
@@ -47,14 +48,15 @@ RUN tar -xzf Python-3.10.16.tgz \
 # RUN python --version && pip --version
 
 # 下载并解压 FFmpeg
-COPY wheels/linux/ffmpeg-master-latest-linux64-gpl.tar.xz .
+# https://www.johnvansickle.com/ffmpeg
+COPY wheels/linux/ffmpeg-6.0.1-amd64-static.tar.xz .
 
-RUN tar -xJf ffmpeg-master-latest-linux64-gpl.tar.xz -C /usr/local \
+RUN tar -xJf ffmpeg-6.0.1-amd64-static.tar.xz -C /usr/local \
     && mv /usr/local/ffmpeg-* /usr/local/ffmpeg \
-    && rm ffmpeg-master-latest-linux64-gpl.tar.xz
+    && rm ffmpeg-6.0.1-amd64-static.tar.xz
 
 # 设置 FFmpeg 到环境变量
-ENV PATH="/usr/local/ffmpeg/bin:${PATH}"
+ENV PATH="/usr/local/ffmpeg:${PATH}"
 
 # RUN ffmpeg -version
 

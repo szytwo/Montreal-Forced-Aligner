@@ -55,7 +55,7 @@ COPY . /code
 RUN conda install -c conda-forge montreal-forced-aligner \
     && pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple \
     && pip install -r api_requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple  \
-    && pip install hanlp -U \
+    && pip install hanlp -U -i https://pypi.tuna.tsinghua.edu.cn/simple \
     && rm -rf wheels
 
 ENV MFA_ROOT_DIR="/code/MFA"

@@ -56,3 +56,18 @@ detach vdisk # 卸载磁盘
 exit # 退出 diskpart
 
 ```
+
+## GIT
+
+```
+
+# 添加新的远程仓库
+git remote add upstream https://github.com/MontrealCorpusTools/Montreal-Forced-Aligner.git 
+# 从远程仓库拉取更新
+git fetch upstream 
+# 切换到主分支
+git checkout main  
+# 合并到本地分支,主分支名称可能是 master,main 
+git merge upstream/main 
+
+```

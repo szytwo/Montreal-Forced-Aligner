@@ -1,5 +1,3 @@
-scikit-learn<1.3
-numpy==1.26.4
 seaborn
 fastapi
 moviepy==1.0.3

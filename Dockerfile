@@ -1,8 +1,7 @@
-# 使用 PyTorch 官方 CUDA 12.1 运行时镜像
-FROM pytorch/pytorch:2.2.2-cuda12.1-cudnn8-runtime
+# 使用 PyTorch 官方 CUDA 运行时镜像
+# https://hub.docker.com/r/pytorch/pytorch/tags
+FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
 
-# 设置容器内工作目录为 /workspace
-WORKDIR /workspace
 
 # 替换软件源为清华镜像
 RUN sed -i 's|archive.ubuntu.com|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list && \
@@ -10,6 +9,7 @@ RUN sed -i 's|archive.ubuntu.com|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/source
 
 # 防止交互式安装，完全不交互，使用默认值
 ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 # 设置时区
 ENV TZ=Asia/Shanghai
 
@@ -22,6 +22,7 @@ RUN apt-get update && \
     libgl1-mesa-glx \
     libglib2.0-0 \
     tzdata \
+    unzip sox libsox-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # RUN gcc --version
@@ -30,31 +31,17 @@ RUN apt-get update && \
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
     && echo $TZ > /etc/timezone
 
-# 安装 Python 3.10.16 到自定义路径
-# 使用 update-alternatives 设置 Python 3.10.16 为默认 Python 版本
-COPY wheels/linux/Python-3.10.16.tgz .
-
-RUN tar -xzf Python-3.10.16.tgz \
-    && cd Python-3.10.16 \
-    && ./configure --prefix=/usr/local/python3.10.16 --enable-optimizations \
-    && make -j$(nproc) && make altinstall \
-    && cd .. \
-    && rm -rf Python-3.10.16 Python-3.10.16.tgz \
-    && update-alternatives --install /usr/bin/python3 python3 /usr/local/python3.10.16/bin/python3.10 1 \
-    && update-alternatives --install /usr/bin/pip3 pip3 /usr/local/python3.10.16/bin/pip3.10 1
-
-# 验证 Python 和 pip 版本
-# RUN python --version && pip --version
-
 # 下载并解压 FFmpeg
-COPY wheels/linux/ffmpeg-master-latest-linux64-gpl.tar.xz .
+# https://www.johnvansickle.com/ffmpeg
+COPY wheels/linux/ffmpeg-6.0.1-amd64-static.tar.xz .
 
-RUN tar -xJf ffmpeg-master-latest-linux64-gpl.tar.xz -C /usr/local \
+RUN tar -xJf ffmpeg-6.0.1-amd64-static.tar.xz -C /usr/local \
     && mv /usr/local/ffmpeg-* /usr/local/ffmpeg \
-    && rm ffmpeg-master-latest-linux64-gpl.tar.xz
+    && rm ffmpeg-6.0.1-amd64-static.tar.xz
 
 # 设置 FFmpeg 到环境变量
-ENV PATH="/usr/local/ffmpeg/bin:${PATH}"
+ENV PATH="/usr/local/ffmpeg:${PATH}"
+ENV FFMPEG_PATH="/usr/local/ffmpeg"
 
 # RUN ffmpeg -version
 
@@ -64,21 +51,19 @@ WORKDIR /code
 # 将项目源代码复制到容器中
 COPY . /code
 
-# 确保缓存目录存在
-RUN mkdir -p /root/.cache/torch/hub/checkpoints && \
-    ln -s /code/checkpoints/auxiliary/2DFAN4-cd938726ad.zip /root/.cache/torch/hub/checkpoints/2DFAN4-cd938726ad.zip && \
-    ln -s /code/checkpoints/auxiliary/s3fd-619a316812.pth /root/.cache/torch/hub/checkpoints/s3fd-619a316812.pth && \
-    ln -s /code/checkpoints/auxiliary/vgg16-397923af.pth /root/.cache/torch/hub/checkpoints/vgg16-397923af.pth
-
 # 升级 pip 并安装 Python 依赖：
-RUN pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple \
-    && pip install -r api_requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple \
-    && rm -rf /wheels
+RUN conda install -c conda-forge montreal-forced-aligner \
+    && pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple \
+    && pip install -r api_requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple  \
+    && pip install hanlp -U \
+    && rm -rf wheels
+
+ENV MFA_ROOT_DIR="/code/MFA"
 
 # 暴露容器端口
 EXPOSE 22
 EXPOSE 80
-EXPOSE 7810
+EXPOSE 8119
 
 # 容器启动时执行 api.py
 # CMD ["python", "api.py"]

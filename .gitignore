@@ -93,11 +93,20 @@ docs/source/api/
 
 *.pclprof
 
-results/
-MFA/
-error/
-venv/
-example/
+/MFA/
+/results/
+/results01/
+/error/
+/error01/
+/logs/
+/logs01/
+/venv/
+/example/test/
+/fonts/
+/wheels/
+/fasttext/
+/test/
+
 *.whl
 
 .github/

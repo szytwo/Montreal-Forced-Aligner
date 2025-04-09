@@ -84,7 +84,7 @@ class SrtProcessor:
         :param language: 语言代码
         """
         text = SrtProcessor.remove_punctuation(text, False)
-        print(text)
+        # print(text)
         tg = TextGrid.fromFile(textgrid_path)
         tier = tg[0]  # 假设对齐文本在第一个层级
         subtitles = []
@@ -137,7 +137,7 @@ class SrtProcessor:
                     search_text = subtitle_text.strip()
                     if search_text:
                         pos = text.find(search_text, end_orig_idx)
-                        print(f'end search_text {search_text}\n end_orig_idx {end_orig_idx}\n pos {pos}')
+                        # print(f'end search_text {search_text}\n end_orig_idx {end_orig_idx}\n pos {pos}')
 
                         if pos != -1:
                             end_pos = pos + len(search_text)  # 在 text 里最后一个字符的索引 + 1

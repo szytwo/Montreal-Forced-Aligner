@@ -27,7 +27,7 @@ services:
               capabilities: [ gpu ]
     shm_size: '32g'
     ports:
-      - '17868:7868'
+      - '18119:8119'
     command: python /code/api.py
     networks:
       - ai_network-01

@@ -7,7 +7,6 @@ noisereduce
 uvicorn
 textgrid
 python-multipart==0.0.18
-spacy-pkuseg==1.0.0
 dragonmapper==0.3.0
 hanziconv==0.3.2
 

@@ -20,6 +20,8 @@ MFA_ROOT_DIR 来存储全局配置设置和保存的模型
 
 默认为 /home/docs/Documents/MFA
 
+PKUSEG_HOME="/code/pkuseg"
+
 ## 下载字典与声音模型
 
 ```

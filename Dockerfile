@@ -59,6 +59,7 @@ RUN conda install -c conda-forge montreal-forced-aligner \
     && rm -rf wheels
 
 ENV MFA_ROOT_DIR="/code/MFA"
+ENV PKUSEG_HOME="/code/pkuseg"
 
 # 暴露容器端口
 EXPOSE 22

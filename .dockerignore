@@ -22,11 +22,20 @@
 __pycache__/
 
 # folders
-/venv/
 /results/
+/results01/
 /error/
-/wheels/win/
+/error01/
+/logs/
+/logs01/
 /deploy/
+/deploy01/
+/venv/
+/wheels/win/
+/example/test/
 
 # data files
 *.bat
+
+/MFA/global_config.yaml
+/MFA/extracted_models/

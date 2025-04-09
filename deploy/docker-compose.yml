@@ -3,16 +3,16 @@ networks:
     driver: bridge
 
 services:
-  sensevoice:
-    image: sensevoice:1.0
-    container_name: sensevoice
+  montreal-forced-aligner:
+    image: montreal-forced-aligner:1.0
+    container_name: montreal-forced-aligner
     restart: always
     runtime: nvidia
     privileged: true
     volumes:
-      - d:/AI/SenseVoice/results:/code/results
-      - d:/AI/SenseVoice/error:/code/error
-      - d:/AI/SenseVoice/logs:/code/logs
+      - d:/AI/Montreal-Forced-Aligner/results:/code/results
+      - d:/AI/Montreal-Forced-Aligner/error:/code/error
+      - d:/AI/Montreal-Forced-Aligner/logs:/code/logs
     environment:
       - TQDM_DISABLE=1 # 全局关闭进度条显示
       - PYTHONUNBUFFERED=1 # 取消标准输出缓冲

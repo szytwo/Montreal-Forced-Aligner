@@ -2,14 +2,10 @@
 
 ```
 conda create --prefix ./venv python==3.11
-
 conda activate ./venv
-
 conda install -c conda-forge montreal-forced-aligner
 
 pip install -r ./api_requirements.txt -i https://mirrors.aliyun.com/pypi/simple
-
-
 pip install hanlp -U   # 安装或升级 hanlp 库
 
 ```
@@ -25,8 +21,10 @@ PKUSEG_HOME="/code/pkuseg"
 ## 下载字典与声音模型
 
 ```
+
 mfa model download dictionary mandarin_china_mfa
 mfa model download acoustic mandarin_mfa
+
 ```
 
 官网 https://montreal-forced-aligner.readthedocs.io/en/latest/getting_started.html
@@ -62,9 +60,9 @@ exit # 退出 diskpart
 ## GIT
 
 ```
-# 添加子模块
-git submodule add https://github.com/szytwo/fastText.git
 
+git submodule add https://github.com/szytwo/fastText.git # 添加子模块
+git submodule update --init --recursive # 初始化子模块
 
 # 添加新的远程仓库
 git remote add upstream https://github.com/MontrealCorpusTools/Montreal-Forced-Aligner.git 

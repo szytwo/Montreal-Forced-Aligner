@@ -2,7 +2,6 @@
 # https://hub.docker.com/r/pytorch/pytorch/tags
 FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
 
-
 # 替换软件源为清华镜像
 RUN sed -i 's|archive.ubuntu.com|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list && \
     sed -i 's|security.ubuntu.com|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list
@@ -52,10 +51,12 @@ WORKDIR /code
 COPY . /code
 
 # 升级 pip 并安装 Python 依赖：
-RUN conda install -c conda-forge montreal-forced-aligner \
-    && pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple \
-    && pip install -r api_requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple  \
-    && pip install hanlp -U -i https://pypi.tuna.tsinghua.edu.cn/simple \
+RUN conda install -c conda-forge montreal-forced-aligner
+
+RUN pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple \
+    && pip install -r api_requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+RUN pip install hanlp -U -i https://pypi.tuna.tsinghua.edu.cn/simple \
     && rm -rf wheels
 
 # 安装fasttext

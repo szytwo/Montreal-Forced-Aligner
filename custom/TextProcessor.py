@@ -2,11 +2,7 @@ import datetime
 import json
 import os
 import re
-import sys
 import traceback
-
-ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append('{}/fastText/python/fasttext_module'.format(ROOT_DIR))
 
 import fasttext
 from PIL import ImageFont

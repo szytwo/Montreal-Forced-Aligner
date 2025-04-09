@@ -12,5 +12,4 @@ hanziconv==0.3.2
 spacy-pkuseg==1.0.0
 
 zhconv
-fasttext; sys_platform == 'linux'
 fasttext-wheel; sys_platform == 'darwin' or sys_platform == 'windows'

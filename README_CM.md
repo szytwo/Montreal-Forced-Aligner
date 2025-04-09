@@ -62,6 +62,9 @@ exit # 退出 diskpart
 ## GIT
 
 ```
+# 添加子模块
+git submodule add https://github.com/szytwo/fastText.git
+
 
 # 添加新的远程仓库
 git remote add upstream https://github.com/MontrealCorpusTools/Montreal-Forced-Aligner.git 

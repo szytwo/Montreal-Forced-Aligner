@@ -58,6 +58,13 @@ RUN conda install -c conda-forge montreal-forced-aligner \
     && pip install hanlp -U -i https://pypi.tuna.tsinghua.edu.cn/simple \
     && rm -rf wheels
 
+# 安装fasttext
+WORKDIR /code/fastText
+
+RUN pip install . -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+WORKDIR /code
+
 ENV MFA_ROOT_DIR="/code/MFA"
 ENV PKUSEG_HOME="/code/pkuseg"
 

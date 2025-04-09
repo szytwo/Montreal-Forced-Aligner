@@ -2,7 +2,11 @@ import datetime
 import json
 import os
 import re
+import sys
 import traceback
+
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append('{}/fastText/python/fasttext_module'.format(ROOT_DIR))
 
 import fasttext
 from PIL import ImageFont
@@ -115,7 +119,7 @@ class TextProcessor:
         """
 
         # 加载预训练的语言检测模型
-        fasttext_model = fasttext.load_model("./fasttext/lid.176.bin")
+        fasttext_model = fasttext.load_model("./fastText/models/lid.176.bin")
 
         try:
             lang = None

@@ -51,8 +51,8 @@ WORKDIR /code
 COPY . /code
 
 # 升级 pip 并安装 Python 依赖：
-RUN conda install -c conda-forge montreal-forced-aligner
-RUN conda install -c conda-forge spacy sudachipy sudachidict-core
+RUN conda install -y -c conda-forge montreal-forced-aligner
+RUN conda install -y -c conda-forge spacy sudachipy sudachidict-core
 RUN pip install --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple \
     && pip install -r api_requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 

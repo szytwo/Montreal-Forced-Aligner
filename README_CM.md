@@ -36,6 +36,7 @@ https://fasttext.cc/docs/en/language-identification.html
 ```
 
 docker build -t montreal-forced-aligner:1.0 .  # 构建镜像
+docker build -t montreal-forced-aligner:1.0 --cache-from montreal-forced-aligner:1.0 .
 docker load -i montreal-forced-aligner-1.0.tar # 导入镜像
 docker save -o montreal-forced-aligner-1.0.tar montreal-forced-aligner:1.0 # 导出镜像
 docker-compose up -d # 后台运行容器

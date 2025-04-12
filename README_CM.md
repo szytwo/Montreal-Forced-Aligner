@@ -5,6 +5,8 @@ conda create --prefix ./venv python==3.11
 conda activate ./venv
 conda install -c conda-forge montreal-forced-aligner
 
+conda install -c conda-forge spacy sudachipy sudachidict-core
+
 pip install -r ./api_requirements.txt -i https://mirrors.aliyun.com/pypi/simple
 pip install hanlp -U   # 安装或升级 hanlp 库
 

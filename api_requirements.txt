@@ -13,3 +13,5 @@ spacy-pkuseg==1.0.0
 
 zhconv
 fasttext-wheel; sys_platform == 'darwin' or sys_platform == 'windows'
+python-mecab-ko
+jamo

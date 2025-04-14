@@ -74,13 +74,13 @@ git branch -m main # 重命名分支
 git branch --set-upstream-to=origin/main main #关联远程分支origin/main 
 
 git remote -v # 查看远程仓库
-git remote remove origin # 移除远程仓库连接
+git remote remove origin # 移除远程仓库连接，origin，upstream
 
-# 添加新的远程仓库
+# 添加新的远程仓库，origin，upstream
 git remote add upstream https://github.com/MontrealCorpusTools/Montreal-Forced-Aligner.git 
 
-git fetch upstream # 从远程仓库拉取更新
+git fetch upstream # 从远程仓库拉取更新，origin，upstream
 git checkout main # 切换到主分支
-git merge upstream/main # 合并到本地分支,主分支名称可能是 master,main 
+git merge upstream/main # 合并到本地分支,主分支名称可能是 ，origin，upstream，master,main 
 
 ```

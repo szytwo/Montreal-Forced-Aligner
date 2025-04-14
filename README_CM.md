@@ -63,17 +63,24 @@ exit # 退出 diskpart
 ## GIT
 
 ```
+git pull # 拉取
+git push # 推送
 
 git submodule add https://github.com/szytwo/fastText.git # 添加子模块
 git submodule update --init --recursive # 初始化子模块
 
+git branch -r # 查看分支
+git branch -m main # 重命名分支
+git branch --set-upstream-to=origin/main main #关联远程分支origin/main 
+
+git remote -v # 查看远程仓库
+git remote remove origin # 移除远程仓库连接
+
 # 添加新的远程仓库
 git remote add upstream https://github.com/MontrealCorpusTools/Montreal-Forced-Aligner.git 
-# 从远程仓库拉取更新
-git fetch upstream 
-# 切换到主分支
-git checkout main  
-# 合并到本地分支,主分支名称可能是 master,main 
-git merge upstream/main 
+
+git fetch upstream # 从远程仓库拉取更新
+git checkout main # 切换到主分支
+git merge upstream/main # 合并到本地分支,主分支名称可能是 master,main 
 
 ```

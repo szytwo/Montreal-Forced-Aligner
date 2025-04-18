@@ -136,7 +136,7 @@ async def process_video(
     start_time = time.time()
 
     try:
-        prompt_text = TextProcessor.clear_text(prompt_text)
+        prompt_text, language = TextProcessor.clear_text(prompt_text)
         # 初始化处理器
         video_processor = VideoProcessor()
         subtitle_file = None
@@ -165,7 +165,8 @@ async def process_video(
             bottom=bottom,
             opacity=opacity,
             fps=fps,
-            isass=isass
+            isass=isass,
+            language=language
         )
         # 返回视频响应
     except Exception as ex:
@@ -209,7 +210,7 @@ async def process_audio(
     start_time = time.time()
 
     try:
-        prompt_text = TextProcessor.clear_text(prompt_text)
+        prompt_text, language = TextProcessor.clear_text(prompt_text)
         # 初始化处理器
         audio_processor = AudioProcessor()
 
@@ -220,7 +221,6 @@ async def process_audio(
             nonsilent=False,
             reduce_noise_enabled=False
         )
-        language = TextProcessor.detect_language(prompt_text)
 
         if language == 'ja' and not font.startswith("fonts/JA/"):
             font = "fonts/JA/Noto_Sans_JP/static/NotoSansJP-Black.ttf"

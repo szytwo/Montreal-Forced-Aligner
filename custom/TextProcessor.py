@@ -7,7 +7,7 @@ import traceback
 import fasttext
 from PIL import ImageFont
 from fontTools.ttLib import TTFont
-from zhconv import convert
+from hanziconv import HanziConv
 
 from custom.file_utils import logging
 
@@ -33,9 +33,11 @@ class TextProcessor:
         # 替换一些影响对齐的符号
         text = re.sub(r'[（）()\u00A0]', '', text)
 
-        if TextProcessor.contains_chinese(text):
+        language = TextProcessor.detect_language(text)
+
+        if language in ['zh', 'zh-cn']:
             text = TextProcessor.add_comma_before_newline(text, "，")
-            text = convert(text, 'zh-cn')
+            text = HanziConv.toSimplified(text)
             text = TextProcessor.replace_blank(text)
             text = TextProcessor.replace_corner_mark(text)
             text = text.replace("—", "，")
@@ -50,7 +52,7 @@ class TextProcessor:
         # 最后替换连续多个空格为一个空格
         text = re.sub(r'[ \t]+', ' ', text)
 
-        return text
+        return text, language
 
     # noinspection PyTypeChecker
     @staticmethod

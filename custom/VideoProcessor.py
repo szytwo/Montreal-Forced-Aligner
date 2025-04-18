@@ -239,7 +239,8 @@ class VideoProcessor:
             bottom: int = 10,
             opacity: int = 0,
             fps: int = 25,
-            isass: bool = False
+            isass: bool = False,
+            language: str = None
     ) -> tuple[str | None | Any, str | None | Any, str | None | Any, str | None | Any] | None:
         """
         给视频添加字幕（以及可选的音频）并输出。
@@ -255,6 +256,7 @@ class VideoProcessor:
         :param opacity: 字幕透明度 (0-255)
         :param fps: 目标帧率
         :param isass: 是否使用ASS
+        :param language: 语言
         :return: 输出视频的路径
         """
 
@@ -265,7 +267,9 @@ class VideoProcessor:
         video_clip = None
         final_clip = None
         output_video = video_file
-        language = TextProcessor.detect_language(prompt_text)
+
+        if not language:
+            language = TextProcessor.detect_language(prompt_text)
 
         if language == 'ja' and not font.startswith("fonts/JA/"):
             font = "fonts/JA/Noto_Sans_JP/static/NotoSansJP-Black.ttf"

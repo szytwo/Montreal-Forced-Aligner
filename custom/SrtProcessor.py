@@ -2,8 +2,8 @@ import json
 import re
 from datetime import timedelta
 
+from hanziconv import HanziConv
 from textgrid import TextGrid
-from zhconv import convert
 
 from custom.TextProcessor import TextProcessor
 from custom.file_utils import logging
@@ -125,7 +125,7 @@ class SrtProcessor:
                     is_en = SrtProcessor.is_english(word)
                     if not is_en and language in ['zh', 'zh-cn']:
                         # 转换为简体中文
-                        word = convert(word, 'zh-cn')
+                        word = HanziConv.toSimplified(word)
                     # 记录当前单词及其时间
                     current_word_list.append((word, interval.minTime, interval.maxTime))
                     # 增加当前单词到字幕行
@@ -278,7 +278,7 @@ class SrtProcessor:
                 is_en = SrtProcessor.is_english(word)
                 if not is_en and language in ['zh', 'zh-cn']:
                     # 转换为简体中文
-                    word = convert(word, 'zh-cn')
+                    word = HanziConv.toSimplified(word)
                 is_single_letter = is_en and len(word) == 1
                 # 记录当前单词及其时间
                 current_word_list.append((word, interval.minTime, interval.maxTime))
@@ -375,7 +375,7 @@ class SrtProcessor:
                 end_time = interval.maxTime
                 if language == 'zh' or language == 'zh-cn':
                     # 转换为简体中文
-                    word = convert(word, 'zh-cn')
+                    word = HanziConv.toSimplified(word)
                 words.append({
                     "word_id": word_id,
                     "start_time": SrtProcessor.format_time(start_time),
